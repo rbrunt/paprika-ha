@@ -22,5 +22,5 @@ class PaprikaApi:
             json_response =  await response.json()
             # TODO: remove this once confirmed working:
             _LOGGER.warning(json.dumps(json_response))
-            return json_response["response"]["token"]
+            return json_response["result"]["token"]
 
