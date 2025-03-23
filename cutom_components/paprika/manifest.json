@@ -4,6 +4,7 @@
   "codeowners": [
     "@rbrunt"
   ],
+  "version": "0.0.1",
   "config_flow": false,
   "dependencies": [],
   "documentation": "https://github.com/rbrunt/paprika-ha",
