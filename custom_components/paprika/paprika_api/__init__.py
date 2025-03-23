@@ -9,10 +9,8 @@ class PaprikaApi:
     def __init__(self, token: str):
         _LOGGER.info("Setting up client")
         self.access_token = token
-        self.session = aiohttp.ClientSession("https://www.paprikaapp.com/api/v2")
-        self.session.headers |= {
-            "authorization": f"Bearer {self.api_token}",
-        }
+        self.session = aiohttp.ClientSession("https://www.paprikaapp.com/api/v2/")
+        self.session.headers["authorization"] = f"Bearer {self.access_token}"
     
     @classmethod
     async def login(cls, email: str, password: str):
