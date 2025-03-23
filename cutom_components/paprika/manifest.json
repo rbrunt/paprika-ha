@@ -1,0 +1,16 @@
+{
+  "domain": "paprika",
+  "name": "Paprika HA",
+  "codeowners": [
+    "@rbrunt"
+  ],
+  "config_flow": false,
+  "dependencies": [],
+  "documentation": "https://github.com/rbrunt/paprika-ha",
+  "homekit": {},
+  "iot_class": "cloud_polling",
+  "quality_scale": "bronze",
+  "requirements": [],
+  "ssdp": [],
+  "zeroconf": []
+}
