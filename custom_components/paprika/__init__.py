@@ -1,11 +1,10 @@
 """The Paprika integration."""
 
 from __future__ import annotations
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
 
-from homeassistant.config_entries import ConfigEntry
+
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
@@ -20,9 +19,6 @@ from .api import PaprikaApi
 # For your initial PR, limit it to 1 platform.
 _PLATFORMS: list[Platform] = [Platform.CALENDAR]
 
-
-class PaprikaApiConfig:
-    token: str
 
 
 

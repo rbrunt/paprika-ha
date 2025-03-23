@@ -1,3 +1,17 @@
+from dataclasses import dataclass
+from typing import TYPE_CHECKING
+from homeassistant.config_entries import ConfigEntry
+
+
+if TYPE_CHECKING:
+    from .api import PaprikaApi
+    from .coordinator import PaprikaCoordinator
+
+
+class PaprikaApiConfig:
+    token: str
+
+
 type PaprikaConfigEntry = ConfigEntry[PaprikaApiConfig]  # noqa: F821
 
 @dataclass
