@@ -2,12 +2,17 @@
 
 from __future__ import annotations
 from dataclasses import dataclass
+from datetime import timedelta
+import logging
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .paprika_api import PaprikaApi
+from .const import DOMAIN
+from .coordinator import PaprikaCoordinator
+
+from .api import PaprikaApi
 
 # List the platforms that you want to support.
 # For your initial PR, limit it to 1 platform.
@@ -23,12 +28,21 @@ type PaprikaConfigEntry = ConfigEntry[PaprikaApiConfig]  # noqa: F821
 @dataclass
 class PaprikaRuntimeData:
     client: PaprikaApi
+    coordinator: PaprikaCoordinator
 
+LOGGER = logging.getLogger(__name__)
 
 # DONE Update entry annotation
 async def async_setup_entry(hass: HomeAssistant, entry: PaprikaConfigEntry) -> bool:
     """Set up Paprika from a config entry."""
 
+
+    coordinator = PaprikaCoordinator(
+        hass=hass,
+        logger=LOGGER,
+        name=DOMAIN,
+        update_interval=timedelta(hours=1),
+    )
 
 
     token = entry.data["token"]
@@ -40,7 +54,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaprikaConfigEntry) -> b
     # TODO 3. Store an API object for your platforms to access
     # entry.runtime_data = MyAPI(...)
 
+    # https://developers.home-assistant.io/docs/integration_fetching_data#coordinated-single-api-poll-for-data-for-all-entities 
+    await coordinator.async_config_entry_first_refresh()
+
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
+    # entry.async_on_unload(entry.add_update_listener(async_reload_entry))
 
     return True
 
