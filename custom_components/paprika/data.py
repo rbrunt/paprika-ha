@@ -1,9 +1,10 @@
 from dataclasses import dataclass
 from typing import TYPE_CHECKING
-from homeassistant.config_entries import ConfigEntry
+
 
 
 if TYPE_CHECKING:
+    from homeassistant.config_entries import ConfigEntry
     from .api import PaprikaApi
     from .coordinator import PaprikaCoordinator
 
@@ -16,5 +17,5 @@ type PaprikaConfigEntry = ConfigEntry[PaprikaApiConfig]  # noqa: F821
 
 @dataclass
 class PaprikaRuntimeData:
-    client: PaprikaApi
-    coordinator: PaprikaCoordinator
+    client: 'PaprikaApi'
+    coordinator: 'PaprikaCoordinator'

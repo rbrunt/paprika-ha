@@ -8,11 +8,9 @@ import logging
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .data import PaprikaConfigEntry
-
+from .data import PaprikaConfigEntry, PaprikaRuntimeData
 from .const import DOMAIN
 from .coordinator import PaprikaCoordinator
-
 from .api import PaprikaApi
 
 # List the platforms that you want to support.
@@ -39,10 +37,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaprikaConfigEntry) -> b
 
     token = entry.data["token"]
     client = PaprikaApi(token)
-    entry.runtime_data = PaprikaRuntimeData(client=client)
+    entry.runtime_data = PaprikaRuntimeData(client=client, coordinator=coordinator)
 
     # TODO 1. Create API instance
-    # TODO 2. Validate the API connection (and authentication)
+    # TODO 2. Validate the API connection (anpd authentication)
     # TODO 3. Store an API object for your platforms to access
     # entry.runtime_data = MyAPI(...)
 

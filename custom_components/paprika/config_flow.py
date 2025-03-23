@@ -12,8 +12,8 @@ from homeassistant.const import CONF_PASSWORD, CONF_EMAIL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
-from .api import PaprikaApi
 
+from .api import PaprikaApi
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,7 +52,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     
 
 
-class ConfigFlow(ConfigFlow, domain=DOMAIN):
+class PaprikaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Paprika."""
 
     VERSION = 1
