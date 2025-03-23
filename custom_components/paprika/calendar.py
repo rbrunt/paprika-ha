@@ -29,7 +29,7 @@ class PaprikaMealCalendar(CalendarEntity, CoordinatorEntity["PaprikaCoordinator"
     @property
     def name(self):
         """Name of the entity."""
-        return f"{self.meal_type.name}"
+        return f"Paprika {self.meal_type.name}"
 
     @property
     def event(self):
@@ -91,6 +91,15 @@ async def async_setup_entry(
         [
             PaprikaMealCalendar(
                 coordinator=entry.runtime_data.coordinator, meal_type=MealType.Dinner
-            )
+            ),
+            PaprikaMealCalendar(
+                coordinator=entry.runtime_data.coordinator, meal_type=MealType.Lunch
+            ),
+            PaprikaMealCalendar(
+                coordinator=entry.runtime_data.coordinator, meal_type=MealType.Breakfast
+            ),
+            PaprikaMealCalendar(
+                coordinator=entry.runtime_data.coordinator, meal_type=MealType.Snack
+            ),
         ]
     )
