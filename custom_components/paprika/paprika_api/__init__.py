@@ -19,7 +19,7 @@ class PaprikaApi:
         """Use a username and password to get a token that can be used to initialise the client for other calls."""
         async with aiohttp.ClientSession() as session: 
             response = await session.post("https://paprikaapp.com/api/v1/account/login", data={"email": email, "password": password})
-            json_response =  response.json()
+            json_response =  await response.json()
             # TODO: remove this once confirmed working:
             _LOGGER.warning(json.dumps(json_response))
             return json_response["response"]["token"]
