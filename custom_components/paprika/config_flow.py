@@ -12,6 +12,8 @@ from homeassistant.const import CONF_PASSWORD, CONF_EMAIL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
+from custom_components.paprika import PaprikaConfigEntry
+
 from .paprika_api import PaprikaApi
 
 from .const import DOMAIN
@@ -74,7 +76,7 @@ class ConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(title=info["title"], token=info["token"], data=user_input)
+                return self.async_create_entry(title=info["title"], data={"token": info["token"]})
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
