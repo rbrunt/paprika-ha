@@ -9,6 +9,8 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
+from .data import PaprikaConfigEntry
+
 from .const import DOMAIN
 from .coordinator import PaprikaCoordinator
 
@@ -23,12 +25,6 @@ class PaprikaApiConfig:
     token: str
 
 
-type PaprikaConfigEntry = ConfigEntry[PaprikaApiConfig]  # noqa: F821
-
-@dataclass
-class PaprikaRuntimeData:
-    client: PaprikaApi
-    coordinator: PaprikaCoordinator
 
 LOGGER = logging.getLogger(__name__)
 

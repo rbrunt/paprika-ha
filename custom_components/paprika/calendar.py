@@ -1,15 +1,14 @@
 from typing import TYPE_CHECKING
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 
-
-from custom_components.paprika import PaprikaConfigEntry
-from custom_components.paprika.api import MealType, PlannedMeal
-from custom_components.paprika.coordinator import PaprikaCoordinator
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from datetime import datetime, timedelta
 
 
 if TYPE_CHECKING:
+    from .coordinator import PaprikaCoordinator
+    from .data import PaprikaConfigEntry
+    from .api import MealType, PlannedMeal
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 

@@ -1,10 +1,11 @@
 
 
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from . import PaprikaConfigEntry
+if TYPE_CHECKING:
+    from .data import PaprikaConfigEntry
 
 
 class PaprikaCoordinator(DataUpdateCoordinator):
