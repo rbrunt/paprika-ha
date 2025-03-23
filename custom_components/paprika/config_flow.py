@@ -32,7 +32,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     """
 
     token = await PaprikaApi.login(data[CONF_EMAIL], data[CONF_PASSWORD])
-    return {"token": token}
+    return {"token": token, "title": data[CONF_EMAIL]}
 
     # except Exception as err:
     #     _LOGGER.error("Error validating API token: %s", err)
@@ -74,7 +74,7 @@ class ConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
-                return self.async_create_entry(token=info["token"], data=user_input)
+                return self.async_create_entry(title=info["title"], token=info["token"], data=user_input)
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
