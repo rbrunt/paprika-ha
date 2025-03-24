@@ -1,11 +1,11 @@
 {
   "domain": "paprika",
-  "name": "Paprika HA",
+  "name": "Paprika Recipes",
   "codeowners": [
     "@rbrunt"
   ],
   "config_flow": true,
   "documentation": "https://github.com/rbrunt/paprika-ha",
   "iot_class": "cloud_polling",
-  "version": "0.0.1"
+  "version": "0.1.0"
 }
