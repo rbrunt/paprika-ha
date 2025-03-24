@@ -35,13 +35,13 @@ class PaprikaMealCalendar(CalendarEntity, CoordinatorEntity["PaprikaCoordinator"
     def event(self):
         LOGGER.info("@@@ Getting event")
 
-        if not self.coordinator.meals and len(self.coordinator.meals) > 0:
+        if not self.coordinator.data.meals and len(self.coordinator.data.meals) > 0:
             return None
 
         def filter_by_type(m: PlannedMeal) -> bool:
             return m["type"] == self.meal_type
 
-        meals = filter(filter_by_type, self.coordinator.meals)
+        meals = filter(filter_by_type, self.coordinator.data.meals)
         today = homeassistant.util.dt.now().date()
         meal = list(filter(lambda x: x["date"] == today, meals))
         LOGGER.info(meals)
@@ -67,7 +67,7 @@ class PaprikaMealCalendar(CalendarEntity, CoordinatorEntity["PaprikaCoordinator"
         def filter_between_dates(m: PlannedMeal) -> bool:
             return start_date.date() <= m["date"] < end_date.date()
 
-        meals = filter(filter_by_type, self.coordinator.meals)
+        meals = filter(filter_by_type, self.coordinator.data.meals)
         meals_in_range = filter(filter_between_dates, meals)
 
         return [

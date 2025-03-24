@@ -31,6 +31,10 @@ class PlannedMeal(TypedDict):
     is_ingredient: bool
 
 
+class PaprikaAuthenticationError(Exception):
+    def __init__(self, message:str):
+        super().__init__(message)
+
 class PaprikaApi:
     def __del__(self):
         # TODO: verify this works as expected when erroring during setup.
@@ -51,8 +55,11 @@ class PaprikaApi:
                 data={"email": email, "password": password},
             )
             json_response = await response.json()
-            # TODO: remove this once confirmed working:
-            _LOGGER.warning(json.dumps(json_response))
+
+            if json_response.get("error"):
+                _LOGGER.error(f"Error from authentication endpoint: {json_response["error"]["message"]}")
+                raise PaprikaAuthenticationError(json_response["error"]["message"])
+
             return json_response["result"]["token"]
 
     async def get_meals(self):

@@ -13,19 +13,15 @@ from .const import DOMAIN
 from .coordinator import PaprikaCoordinator
 from .api import PaprikaApi
 
-# List the platforms that you want to support.
-# For your initial PR, limit it to 1 platform.
-_PLATFORMS: list[Platform] = [Platform.CALENDAR]
 
+_PLATFORMS: list[Platform] = [Platform.CALENDAR]
 
 
 
 LOGGER = logging.getLogger(__name__)
 
-# DONE Update entry annotation
 async def async_setup_entry(hass: HomeAssistant, entry: PaprikaConfigEntry) -> bool:
     """Set up Paprika from a config entry."""
-
 
     coordinator = PaprikaCoordinator(
         hass=hass,
@@ -34,15 +30,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaprikaConfigEntry) -> b
         update_interval=timedelta(hours=1),
     )
 
-
     token = entry.data["token"]
     client = PaprikaApi(token)
     entry.runtime_data = PaprikaRuntimeData(client=client, coordinator=coordinator)
-
-    # TODO 1. Create API instance
-    # TODO 2. Validate the API connection (anpd authentication)
-    # TODO 3. Store an API object for your platforms to access
-    # entry.runtime_data = MyAPI(...)
 
     # https://developers.home-assistant.io/docs/integration_fetching_data#coordinated-single-api-poll-for-data-for-all-entities 
     await coordinator.async_config_entry_first_refresh()

@@ -13,7 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 
 
-from .api import PaprikaApi
+from .api import PaprikaApi, PaprikaAuthenticationError
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,24 +31,16 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     Data has the keys from STEP_USER_DATA_SCHEMA with values provided by the user.
     """
 
-    token = await PaprikaApi.login(data[CONF_EMAIL], data[CONF_PASSWORD])
-    return {"token": token, "title": data[CONF_EMAIL]}
-
-    # except Exception as err:
-    #     _LOGGER.error("Error validating API token: %s", err)
-    #     raise CannotConnect()
-
-    # hub = PlaceholderHub(data[CONF_HOST])
-
-    # if not await hub.authenticate(data[CONF_USERNAME], data[CONF_PASSWORD]):
-    #     raise InvalidAuth
+    try:
+        token = await PaprikaApi.login(data[CONF_EMAIL], data[CONF_PASSWORD])
+        return {"token": token, "title": data[CONF_EMAIL]}
+    except PaprikaAuthenticationError:
+        raise InvalidAuth
 
     # If you cannot connect:
     # throw CannotConnect
     # If the authentication is wrong:
     # InvalidAuth
-
-    # Return info that you want to store in the config entry.
     
 
 
