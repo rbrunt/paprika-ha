@@ -1,8 +1,8 @@
-from enum import Enum
-import json
 import logging
-from typing import NewType, Optional, TypedDict, cast
 from datetime import date, datetime
+from enum import Enum
+from typing import NewType, Optional, TypedDict, cast
+
 import aiohttp
 
 _LOGGER = logging.getLogger(__name__)
@@ -31,9 +31,26 @@ class PlannedMeal(TypedDict):
     is_ingredient: bool
 
 
+class GroceryListItem(TypedDict):
+    uid: str
+    recipe_uid: RecipeID | None
+    name: str
+    order_flag: int
+    purchased: bool
+    aisle: str
+    ingredient: str
+    recipe: str
+    instruction: str
+    quantity: str
+    separate: bool
+    aisle_uid: str
+    list_uid: str
+
+
 class PaprikaAuthenticationError(Exception):
-    def __init__(self, message:str):
+    def __init__(self, message: str):
         super().__init__(message)
+
 
 class PaprikaApi:
     def __del__(self):
@@ -57,12 +74,14 @@ class PaprikaApi:
             json_response = await response.json()
 
             if json_response.get("error"):
-                _LOGGER.error(f"Error from authentication endpoint: {json_response["error"]["message"]}")
+                _LOGGER.error(
+                    f"Error from authentication endpoint: {json_response['error']['message']}"
+                )
                 raise PaprikaAuthenticationError(json_response["error"]["message"])
 
             return json_response["result"]["token"]
 
-    async def get_meals(self):
+    async def get_meals(self) -> list[PlannedMeal]:
         response = await self.session.get("sync/meals")
         response.raise_for_status()
         response_json = await response.json()
@@ -72,3 +91,10 @@ class PaprikaApi:
             meal["type"] = MealType(meal["type"])
             meals.append(cast(PlannedMeal, meal))
         return meals
+
+    async def get_groceries(self) -> list[GroceryListItem]:
+        """Get grocery list items, for all lists."""
+        response = await self.session.get("sync/groceries")
+        response.raise_for_status()
+        response_json = await response.json()
+        return [cast(GroceryListItem, item) for item in response_json["result"]]
