@@ -1,0 +1,9 @@
+{
+    "cSpell.words": [
+        "hass",
+        "homeassistant"
+    ],
+    "files.associations": {
+        "*.yaml": "home-assistant"
+    }
+}
