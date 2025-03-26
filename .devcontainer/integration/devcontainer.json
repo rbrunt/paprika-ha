@@ -47,6 +47,7 @@
                 "libturbojpeg0",
                 "libpcap-dev"
             ]
-        }
+        },
+        "ghcr.io/georgofenbeck/features/lazygit-linuxbinary": 1
     }
 }
