@@ -4,7 +4,13 @@ An unofficial [Home Assistant](https://www.home-assistant.io/) Integration for P
 
 ## Features
 
-Currently the integration just exposes 4 calendars: one for each meal type, which allows you to see what meals have been planned in the App for a given day.
+### Meal Plans
+
+The integration exposes 4 Calendar Entities to show upcoming and past meals. One for each of the 4 meal types in the app. 
+
+### Grocery Lists
+
+The integration exposes a grocery list as a 'todo list' in Home Assistant. For now this is read only, and items from all the lists you have in the app are combined. 
 
 ## Installing
 
