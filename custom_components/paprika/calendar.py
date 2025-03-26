@@ -1,26 +1,31 @@
 import logging
+from datetime import timedelta
 from typing import TYPE_CHECKING
-from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 import homeassistant.util.dt
-from datetime import datetime, timedelta
-
+from homeassistant.components.calendar import CalendarEntity, CalendarEvent
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .api import MealType, PlannedMeal
 
 if TYPE_CHECKING:
-    from .coordinator import PaprikaCoordinator
-    from .data import PaprikaConfigEntry
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
+
+    from .coordinator import PaprikaCoordinator
+    from .data import PaprikaConfigEntry
 
 
 LOGGER = logging.getLogger(__name__)
 
 
 class PaprikaMealCalendar(CalendarEntity, CoordinatorEntity["PaprikaCoordinator"]):
-    def __init__(self, coordinator: "PaprikaCoordinator", entry: "PaprikaConfigEntry", meal_type: MealType):
+    def __init__(
+        self,
+        coordinator: "PaprikaCoordinator",
+        entry: "PaprikaConfigEntry",
+        meal_type: MealType,
+    ):
         super().__init__(coordinator)
         self.meal_type = meal_type
         self._attr_unique_id = f"{entry.title}_calendar_{self.meal_type.name}"
@@ -90,16 +95,24 @@ async def async_setup_entry(
     async_add_entities(
         [
             PaprikaMealCalendar(
-                coordinator=entry.runtime_data.coordinator, entry=entry, meal_type=MealType.Dinner
+                coordinator=entry.runtime_data.coordinator,
+                entry=entry,
+                meal_type=MealType.Dinner,
             ),
             PaprikaMealCalendar(
-                coordinator=entry.runtime_data.coordinator, entry=entry, meal_type=MealType.Lunch
+                coordinator=entry.runtime_data.coordinator,
+                entry=entry,
+                meal_type=MealType.Lunch,
             ),
             PaprikaMealCalendar(
-                coordinator=entry.runtime_data.coordinator, entry=entry, meal_type=MealType.Breakfast
+                coordinator=entry.runtime_data.coordinator,
+                entry=entry,
+                meal_type=MealType.Breakfast,
             ),
             PaprikaMealCalendar(
-                coordinator=entry.runtime_data.coordinator, entry=entry, meal_type=MealType.Snack
+                coordinator=entry.runtime_data.coordinator,
+                entry=entry,
+                meal_type=MealType.Snack,
             ),
         ]
     )

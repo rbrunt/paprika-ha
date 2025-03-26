@@ -1,24 +1,23 @@
 """The Paprika integration."""
 
 from __future__ import annotations
-from datetime import timedelta
-import logging
 
+import logging
+from datetime import timedelta
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
-from .data import PaprikaConfigEntry, PaprikaRuntimeData
+from .api import PaprikaApi
 from .const import DOMAIN
 from .coordinator import PaprikaCoordinator
-from .api import PaprikaApi
+from .data import PaprikaConfigEntry, PaprikaRuntimeData
 
-
-_PLATFORMS: list[Platform] = [Platform.CALENDAR]
-
+_PLATFORMS: list[Platform] = [Platform.CALENDAR, Platform.TODO]
 
 
 LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: PaprikaConfigEntry) -> bool:
     """Set up Paprika from a config entry."""
@@ -34,7 +33,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaprikaConfigEntry) -> b
     client = PaprikaApi(token)
     entry.runtime_data = PaprikaRuntimeData(client=client, coordinator=coordinator)
 
-    # https://developers.home-assistant.io/docs/integration_fetching_data#coordinated-single-api-poll-for-data-for-all-entities 
+    # https://developers.home-assistant.io/docs/integration_fetching_data#coordinated-single-api-poll-for-data-for-all-entities
     await coordinator.async_config_entry_first_refresh()
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
