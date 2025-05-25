@@ -6,7 +6,7 @@ An unofficial [Home Assistant](https://www.home-assistant.io/) Integration for P
 
 ### Meal Plans
 
-The integration exposes 4 Calendar Entities to show upcoming and past meals. One for each of the 4 meal types in the app. 
+The integration exposes a Calendar Entity for each of the meal types in the app.
 
 ### Grocery Lists
 
