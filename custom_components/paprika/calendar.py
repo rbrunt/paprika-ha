@@ -28,13 +28,13 @@ class PaprikaMealCalendar(CalendarEntity, CoordinatorEntity["PaprikaCoordinator"
     ):
         super().__init__(coordinator)
         self.meal_type = meal_type
-        self._attr_unique_id = f"{entry.title}_calendar_{self.meal_type.name}"
+        self._attr_unique_id = f"{entry.title}_calendar_{self.meal_type['name']}"
         self._attr_has_entity_name = False
 
     @property
     def name(self):
         """Name of the entity."""
-        return f"Paprika {self.meal_type.name}"
+        return f"Paprika {self.meal_type['name']}"
 
     @property
     def event(self):
@@ -97,22 +97,8 @@ async def async_setup_entry(
             PaprikaMealCalendar(
                 coordinator=entry.runtime_data.coordinator,
                 entry=entry,
-                meal_type=MealType.Dinner,
-            ),
-            PaprikaMealCalendar(
-                coordinator=entry.runtime_data.coordinator,
-                entry=entry,
-                meal_type=MealType.Lunch,
-            ),
-            PaprikaMealCalendar(
-                coordinator=entry.runtime_data.coordinator,
-                entry=entry,
-                meal_type=MealType.Breakfast,
-            ),
-            PaprikaMealCalendar(
-                coordinator=entry.runtime_data.coordinator,
-                entry=entry,
-                meal_type=MealType.Snack,
-            ),
+                meal_type=mt,
+            )
+            for mt in entry.runtime_data.coordinator.data.meal_types
         ]
     )

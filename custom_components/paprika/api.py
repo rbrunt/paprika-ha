@@ -12,11 +12,14 @@ MealId = NewType("MealId", str)
 RecipeID = NewType("RecipeID", str)
 
 
-class MealType(Enum):
-    Breakfast = 0
-    Lunch = 1
-    Dinner = 2
-    Snack = 3
+class MealType(TypedDict):
+    uid: str
+    name: str
+    order_flag: int
+    color: str
+    export_all_day: bool
+    export_time: int
+    original_type: int
 
 
 class PlannedMeal(TypedDict):
@@ -26,7 +29,7 @@ class PlannedMeal(TypedDict):
     type: MealType
     name: str
     order_flag: int
-    type_uid: str  # TODO
+    type_uid: str
     scale: Optional[int]
     is_ingredient: bool
 
@@ -81,15 +84,22 @@ class PaprikaApi:
 
             return json_response["result"]["token"]
 
-    async def get_meals(self) -> list[PlannedMeal]:
+    async def get_meal_types(self) -> list[MealType]:
+        response = await self.session.get("sync/mealtypes")
+        response.raise_for_status()
+        response_json = await response.json()
+        return [cast("MealType", item) for item in response_json["result"]]
+
+    async def get_meals(self, meal_types: list[MealType]) -> list[PlannedMeal]:
+        meal_types_by_id = {mt["uid"]: mt for mt in meal_types}
         response = await self.session.get("sync/meals")
         response.raise_for_status()
         response_json = await response.json()
         meals: list[PlannedMeal] = []
         for meal in response_json["result"]:
             meal["date"] = datetime.strptime(meal["date"][:10], "%Y-%m-%d").date()
-            meal["type"] = MealType(meal["type"])
-            meals.append(cast(PlannedMeal, meal))
+            meal["type"] = meal_types_by_id[meal["type_uid"]]
+            meals.append(cast("PlannedMeal", meal))
         return meals
 
     async def get_groceries(self) -> list[GroceryListItem]:
@@ -97,4 +107,4 @@ class PaprikaApi:
         response = await self.session.get("sync/groceries")
         response.raise_for_status()
         response_json = await response.json()
-        return [cast(GroceryListItem, item) for item in response_json["result"]]
+        return [cast("GroceryListItem", item) for item in response_json["result"]]
