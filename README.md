@@ -14,7 +14,7 @@ The integration exposes a grocery list as a 'todo list' in Home Assistant. For n
 
 ## Installing
 
-The integration is available in [HACS] (https://hacs.xyz). After you've installed HACS, simply:
+The integration is available in [HACS](https://hacs.xyz). After you've installed HACS, simply:
 
 1. Go to HACS, search for 'paprika', and install the extension. Restart Home Assistant. Alternatively, you can click this link to go straight there: [![Open your Home Assistant instance and open a repository inside the Home Assistant Community Store.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=rbrunt&repository=paprika-ha)
 
