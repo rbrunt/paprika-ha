@@ -7,6 +7,7 @@ import aiohttp
 
 _LOGGER = logging.getLogger(__name__)
 
+START_DATE_FILTER = date(2025, 1, 1)  # Only process meals after this date (see issue #13)
 
 MealId = NewType("MealId", str)
 RecipeID = NewType("RecipeID", str)
@@ -97,7 +98,11 @@ class PaprikaApi:
         response_json = await response.json()
         meals: list[PlannedMeal] = []
         for meal in response_json["result"]:
-            meal["date"] = datetime.strptime(meal["date"][:10], "%Y-%m-%d").date()
+            meal_date = datetime.strptime(meal["date"][:10], "%Y-%m-%d").date()
+            # Skip meals before START_DATE_FILTER to avoid processing old data with bad ids (see issue #13)
+            if meal_date < START_DATE_FILTER:
+                continue
+            meal["date"] = meal_date
             meal["type"] = meal_types_by_id[meal["type_uid"]]
             meals.append(cast("PlannedMeal", meal))
         return meals
