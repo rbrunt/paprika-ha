@@ -26,7 +26,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaprikaConfigEntry) -> b
         hass=hass,
         logger=LOGGER,
         name=DOMAIN,
-        update_interval=timedelta(hours=1),
+        update_interval=timedelta(minutes=15),
     )
 
     token = entry.data["token"]
