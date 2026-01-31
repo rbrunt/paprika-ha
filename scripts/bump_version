@@ -1,0 +1,74 @@
+#!/usr/bin/env python3
+import argparse
+import json
+import re
+import sys
+from pathlib import Path
+
+
+def parse_args():
+    p = argparse.ArgumentParser(description="Bump version in manifest.json")
+    p.add_argument(
+        "part",
+        nargs="?",
+        choices=("major", "minor", "patch"),
+        default="patch",
+        help="Which part to bump (default: patch)",
+    )
+    p.add_argument(
+        "--manifest",
+        default="custom_components/paprika/manifest.json",
+        help="Path to manifest.json (relative to repo root)",
+    )
+    p.add_argument(
+        "--dry-run", action="store_true", help="Print new version but don't write file"
+    )
+    return p.parse_args()
+
+
+def bump_version(ver: str, part: str) -> str:
+    m = re.match(r"^(\d+)\.(\d+)\.(\d+)(.*)$", ver)
+    if not m:
+        raise ValueError(f"Version '{ver}' is not in X.Y.Z format")
+    major, minor, patch, suffix = m.groups()
+    major = int(major)
+    minor = int(minor)
+    patch = int(patch)
+    if part == "major":
+        major += 1
+        minor = 0
+        patch = 0
+    elif part == "minor":
+        minor += 1
+        patch = 0
+    else:
+        patch += 1
+    return f"{major}.{minor}.{patch}{suffix}"
+
+
+def main():
+    args = parse_args()
+    p = Path(args.manifest)
+    if not p.exists():
+        print(f"Manifest file not found: {p}", file=sys.stderr)
+        sys.exit(2)
+    data = json.loads(p.read_text(encoding="utf-8"))
+    ver = data.get("version")
+    if not ver:
+        print("No 'version' key found in manifest.json", file=sys.stderr)
+        sys.exit(2)
+    try:
+        new_ver = bump_version(ver, args.part)
+    except ValueError as e:
+        print(str(e), file=sys.stderr)
+        sys.exit(2)
+    print(f"{p}: {ver} -> {new_ver}")
+    if not args.dry_run:
+        data["version"] = new_ver
+        p.write_text(
+            json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+        )
+
+
+if __name__ == "__main__":
+    main()

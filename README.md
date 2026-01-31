@@ -10,7 +10,7 @@ The integration exposes a Calendar Entity for each of the meal types in the app.
 
 ### Grocery Lists
 
-The integration exposes a grocery list as a 'todo list' in Home Assistant. For now this is read only, and items from all the lists you have in the app are combined. 
+The integration exposes a grocery list as a 'todo list' in Home Assistant. For now this is read only, and items from all the lists you have in the app are combined.
 
 ## Installing
 
@@ -21,4 +21,6 @@ The integration is available in [HACS](https://hacs.xyz). After you've installed
 2. Under "Devices and Service", set up "Paprika", enter your username and password, and you're done!
 
 
+## Developing
 
+See [DEVELOPING](./DEVELOPING.md) for notes on developing the integration.
