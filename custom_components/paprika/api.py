@@ -15,6 +15,23 @@ MealId = NewType("MealId", str)
 RecipeID = NewType("RecipeID", str)
 
 
+class SyncStatus(TypedDict):
+    categories: int
+    recipes: int
+    photos: int
+    groceries: int
+    grocerylists: int
+    groceryaisles: int
+    groceryingredients: int
+    meals: int
+    mealtypes: int
+    bookmarks: int
+    pantry: int
+    pantrylocations: int
+    menus: int
+    menuitems: int
+
+
 class MealType(TypedDict):
     uid: str
     name: str
@@ -92,6 +109,13 @@ class PaprikaApi:
         response.raise_for_status()
         response_json = await response.json()
         return [cast("MealType", item) for item in response_json["result"]]
+
+    async def get_status(self) -> SyncStatus:
+        """Get the sync status to check if any data has changed."""
+        response = await self.session.get("sync/status")
+        response.raise_for_status()
+        response_json = await response.json()
+        return cast("SyncStatus", response_json["result"])
 
     async def get_meals(self, meal_types: list[MealType]) -> list[PlannedMeal]:
         meal_types_by_id = {mt["uid"]: mt for mt in meal_types}
