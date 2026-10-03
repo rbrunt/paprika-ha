@@ -10,7 +10,9 @@ The integration exposes a Calendar Entity for each of the meal types in the app.
 
 ### Grocery Lists
 
-The integration exposes a grocery list as a 'todo list' in Home Assistant. For now this is read only, and items from all the lists you have in the app are combined.
+The integration exposes each grocery list from your Paprika account as a 'todo list' entity in Home Assistant. 
+
+**Note:** Due to how Paprika's API works, deleting an item marks it purchased in the paprika app.
 
 ## Installing
 

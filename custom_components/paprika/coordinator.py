@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Any
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 if TYPE_CHECKING:
-    from .api import GroceryListItem, MealType, PlannedMeal, SyncStatus
+    from .api import GroceryList, GroceryListItem, MealType, PlannedMeal, SyncStatus
     from .data import PaprikaConfigEntry
 
 
@@ -14,6 +14,7 @@ class PaprikaData:
     meals: list["PlannedMeal"]
     groceries: list["GroceryListItem"]
     meal_types: list["MealType"]
+    grocery_lists: list["GroceryList"]
 
 
 class PaprikaCoordinator(DataUpdateCoordinator[PaprikaData]):
@@ -37,9 +38,36 @@ class PaprikaCoordinator(DataUpdateCoordinator[PaprikaData]):
         meal_types = await self.config_entry.runtime_data.client.get_meal_types()
         meals = await self.config_entry.runtime_data.client.get_meals(meal_types)
         groceries = await self.config_entry.runtime_data.client.get_groceries()
+        grocery_lists = await self.config_entry.runtime_data.client.get_grocery_lists()
         return PaprikaData(
             status=current_status,
             meal_types=meal_types,
             meals=meals,
             groceries=groceries,
+            grocery_lists=grocery_lists,
         )
+
+    async def async_save_grocery_items(
+        self, items: list["GroceryListItem"]
+    ) -> None:
+        await self.config_entry.runtime_data.client.save_grocery_items(items)
+        if self.data:
+            groceries = list(self.data.groceries)
+            for item in items:
+                existing_index = next(
+                    (i for i, g in enumerate(groceries) if g["uid"] == item["uid"]),
+                    None,
+                )
+                if existing_index is not None:
+                    groceries[existing_index] = item
+                else:
+                    groceries.append(item)
+            self.async_set_updated_data(
+                PaprikaData(
+                    status=self.data.status,
+                    meal_types=self.data.meal_types,
+                    meals=self.data.meals,
+                    groceries=groceries,
+                    grocery_lists=self.data.grocery_lists,
+                )
+            )

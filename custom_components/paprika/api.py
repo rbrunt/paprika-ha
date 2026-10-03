@@ -1,4 +1,8 @@
+import gzip
+import io
+import json
 import logging
+import uuid
 from datetime import date, datetime
 from enum import Enum
 from typing import NewType, Optional, TypedDict, cast
@@ -52,6 +56,14 @@ class PlannedMeal(TypedDict):
     type_uid: str
     scale: Optional[int]
     is_ingredient: bool
+
+
+class GroceryList(TypedDict):
+    uid: str
+    name: str
+    order_flag: int
+    is_default: bool
+    reminders_list: str
 
 
 class GroceryListItem(TypedDict):
@@ -141,3 +153,37 @@ class PaprikaApi:
         response.raise_for_status()
         response_json = await response.json()
         return [cast("GroceryListItem", item) for item in response_json["result"]]
+
+    async def get_grocery_lists(self) -> list[GroceryList]:
+        response = await self.session.get("sync/grocerylists")
+        response.raise_for_status()
+        response_json = await response.json()
+        return [cast("GroceryList", item) for item in response_json["result"]]
+
+    async def _post_sync(
+        self, entity: str, payload: list | dict
+    ) -> None:
+        json_bytes = json.dumps(payload).encode("utf-8")
+        compressed = io.BytesIO()
+        with gzip.GzipFile(fileobj=compressed, mode="wb") as gz:
+            gz.write(json_bytes)
+        compressed.seek(0)
+
+        boundary = str(uuid.uuid4())
+        body = (
+            f"--{boundary}\r\n"
+            f'Content-Disposition: form-data; name=data; filename=file; filename*=utf-8\'\'file\r\n'
+            f"\r\n"
+        ).encode("utf-8")
+        body += compressed.read()
+        body += f"\r\n--{boundary}--\r\n".encode("utf-8")
+
+        response = await self.session.post(
+            f"sync/{entity}/",
+            data=body,
+            headers={"Content-Type": f"multipart/form-data; boundary={boundary}"},
+        )
+        response.raise_for_status()
+
+    async def save_grocery_items(self, items: list[GroceryListItem]) -> None:
+        await self._post_sync("groceries", items)
