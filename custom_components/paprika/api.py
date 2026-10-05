@@ -141,8 +141,18 @@ class PaprikaApi:
             if meal_date < START_DATE_FILTER:
                 _LOGGER.debug("Skipping meal with date before cutoff: %s", meal)
                 continue
+            # Meals from before Paprika changed its meal type IDs can have a null or
+            # unknown type_uid even when dated after START_DATE_FILTER.
+            meal_type = meal_types_by_id.get(meal.get("type_uid"))
+            if meal_type is None:
+                _LOGGER.warning(
+                    "Skipping meal with unknown meal type (type_uid=%r): %s",
+                    meal.get("type_uid"),
+                    meal,
+                )
+                continue
             meal["date"] = meal_date
-            meal["type"] = meal_types_by_id[meal["type_uid"]]
+            meal["type"] = meal_type
             meals.append(cast("PlannedMeal", meal))
         _LOGGER.debug("Got %s meals from API", len(meals))
         return meals
