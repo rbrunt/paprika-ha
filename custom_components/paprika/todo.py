@@ -61,19 +61,21 @@ class PaprikaGroceryList(TodoListEntity, CoordinatorEntity["PaprikaCoordinator"]
         ]
 
     async def async_create_todo_item(self, item: TodoItem) -> None:
+        ingredient = item.summary.lower()
+        aisle, aisle_uid = await self.coordinator.async_resolve_aisle(ingredient)
         new_item = {
             "uid": str(uuid.uuid4()).upper(),
             "recipe_uid": None,
             "name": item.summary,
             "order_flag": 0,
             "purchased": False,
-            "aisle": "",
-            "ingredient": item.summary.lower(),
+            "aisle": aisle,
+            "ingredient": ingredient,
             "recipe": None,
             "instruction": "",
             "quantity": item.description or "",
             "separate": False,
-            "aisle_uid": "",
+            "aisle_uid": aisle_uid,
             "list_uid": self.grocery_list["uid"],
         }
         await self.coordinator.async_save_grocery_items([new_item])

@@ -82,6 +82,18 @@ class GroceryListItem(TypedDict):
     list_uid: str
 
 
+class GroceryAisle(TypedDict):
+    uid: str
+    name: str
+    order_flag: int
+
+
+class GroceryIngredient(TypedDict):
+    uid: str
+    name: str
+    aisle_uid: str | None
+
+
 class PaprikaAuthenticationError(Exception):
     def __init__(self, message: str):
         super().__init__(message)
@@ -169,6 +181,19 @@ class PaprikaApi:
         response.raise_for_status()
         response_json = await response.json()
         return [cast("GroceryList", item) for item in response_json["result"]]
+
+    async def get_grocery_aisles(self) -> list[GroceryAisle]:
+        response = await self.session.get("sync/groceryaisles")
+        response.raise_for_status()
+        response_json = await response.json()
+        return [cast("GroceryAisle", item) for item in response_json["result"]]
+
+    async def get_grocery_ingredients(self) -> list[GroceryIngredient]:
+        """Get Paprika's ingredient name to aisle mapping."""
+        response = await self.session.get("sync/groceryingredients")
+        response.raise_for_status()
+        response_json = await response.json()
+        return [cast("GroceryIngredient", item) for item in response_json["result"]]
 
     async def _post_sync(
         self, entity: str, payload: list | dict
