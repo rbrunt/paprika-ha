@@ -1,9 +1,12 @@
 """Keyword fallback for guessing a Paprika aisle from an item name.
 
-Paprika's own aisle guess happens inside its apps and isn't exposed by the sync API,
-so items we create need an aisle assigned here. Keys are Paprika's default aisle
-names; aisles the user has renamed or removed are skipped. Order matters: the first
-aisle with a matching keyword wins, so more specific aisles come first.
+Items created through the sync API are stored with no aisle, and Paprika's apps
+show them under Miscellaneous. Paprika's own aisle guess presumably happens
+client-side in the apps, or in an undocumented server-side process; either way it
+isn't applied to items we post. This table is a workaround that guesses an aisle
+ourselves. Keys are Paprika's default aisle names; aisles the user has renamed or
+removed are skipped. The longest matching keyword wins; ties go to the aisle listed
+first.
 """
 
 import re
