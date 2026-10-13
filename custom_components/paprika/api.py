@@ -88,9 +88,8 @@ class PaprikaAuthenticationError(Exception):
 
 
 class PaprikaApi:
-    def __del__(self):
-        # TODO: verify this works as expected when erroring during setup.
-        self.session.close()
+    async def async_close(self):
+        await self.session.close()
 
     def __init__(self, token: str):
         _LOGGER.info("Setting up client")

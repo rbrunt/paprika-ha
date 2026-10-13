@@ -71,3 +71,4 @@ class PaprikaCoordinator(DataUpdateCoordinator[PaprikaData]):
                     grocery_lists=self.data.grocery_lists,
                 )
             )
+        self.last_status = None
