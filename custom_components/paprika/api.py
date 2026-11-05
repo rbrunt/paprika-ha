@@ -58,6 +58,21 @@ class PlannedMeal(TypedDict):
     is_ingredient: bool
 
 
+class Recipe(TypedDict):
+    uid: RecipeID
+    hash: str
+    name: str
+    ingredients: str
+    directions: str
+    notes: str
+    servings: str
+    prep_time: str
+    cook_time: str
+    total_time: str
+    source: str
+    source_url: str
+
+
 class GroceryList(TypedDict):
     uid: str
     name: str
@@ -156,6 +171,19 @@ class PaprikaApi:
             meals.append(cast("PlannedMeal", meal))
         _LOGGER.debug("Got %s meals from API", len(meals))
         return meals
+
+    async def get_recipe_hashes(self) -> dict[RecipeID, str]:
+        """Get the hash of every recipe, to tell which ones changed."""
+        response = await self.session.get("sync/recipes")
+        response.raise_for_status()
+        response_json = await response.json()
+        return {item["uid"]: item["hash"] for item in response_json["result"]}
+
+    async def get_recipe(self, uid: RecipeID) -> Recipe:
+        response = await self.session.get(f"sync/recipe/{uid}")
+        response.raise_for_status()
+        response_json = await response.json()
+        return cast("Recipe", response_json["result"])
 
     async def get_groceries(self) -> list[GroceryListItem]:
         """Get grocery list items, for all lists."""
