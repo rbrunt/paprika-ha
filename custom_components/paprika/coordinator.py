@@ -7,6 +7,8 @@ import aiohttp
 import homeassistant.util.dt
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .const import CONF_RECIPE_DETAILS, DEFAULT_RECIPE_DETAILS
+
 if TYPE_CHECKING:
     from .api import (
         GroceryList,
@@ -63,7 +65,10 @@ class PaprikaCoordinator(DataUpdateCoordinator[PaprikaData]):
         meals = await self.config_entry.runtime_data.client.get_meals(meal_types)
         groceries = await self.config_entry.runtime_data.client.get_groceries()
         grocery_lists = await self.config_entry.runtime_data.client.get_grocery_lists()
-        recipes = await self._async_update_recipes(meals)
+        show_recipes = self.config_entry.options.get(
+            CONF_RECIPE_DETAILS, DEFAULT_RECIPE_DETAILS
+        )
+        recipes = await self._async_update_recipes(meals) if show_recipes else {}
         return PaprikaData(
             status=current_status,
             meal_types=meal_types,

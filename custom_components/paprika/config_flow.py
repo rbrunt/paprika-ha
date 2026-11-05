@@ -7,14 +7,19 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_PASSWORD, CONF_EMAIL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
 
 from .api import PaprikaApi, PaprikaAuthenticationError
-from .const import DOMAIN
+from .const import CONF_RECIPE_DETAILS, DEFAULT_RECIPE_DETAILS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -50,6 +55,12 @@ class PaprikaConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 0
 
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: ConfigEntry) -> PaprikaOptionsFlow:
+        """Get the options flow for this handler."""
+        return PaprikaOptionsFlow()
+
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -70,6 +81,31 @@ class PaprikaConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+
+class PaprikaOptionsFlow(OptionsFlowWithReload):
+    """Handle Paprika options. Saving reloads the entry so the change applies."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(
+                        CONF_RECIPE_DETAILS,
+                        default=self.config_entry.options.get(
+                            CONF_RECIPE_DETAILS, DEFAULT_RECIPE_DETAILS
+                        ),
+                    ): bool,
+                }
+            ),
         )
 
 
