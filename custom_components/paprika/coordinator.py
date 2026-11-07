@@ -58,7 +58,10 @@ class PaprikaCoordinator(DataUpdateCoordinator[PaprikaData]):
                     (i for i, g in enumerate(groceries) if g["uid"] == item["uid"]),
                     None,
                 )
-                if existing_index is not None:
+                if item.get("deleted"):
+                    if existing_index is not None:
+                        groceries.pop(existing_index)
+                elif existing_index is not None:
                     groceries[existing_index] = item
                 else:
                     groceries.append(item)
