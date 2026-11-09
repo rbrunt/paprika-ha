@@ -83,7 +83,10 @@ def format_recipe_html(recipe: Recipe) -> str:
         )
         if value
     ]
-    if servings := recipe.get("servings"):
+    if servings := (recipe.get("servings") or "").strip():
+        # Paprika keeps whatever the source had: "Servings: 4", "4 servings" or "4"
+        if not any(c.isalpha() for c in servings):
+            servings = f"Servings: {servings}"
         facts.append(escape(servings))
     if facts:
         sections.append(f"<p>{' · '.join(facts)}</p>")
