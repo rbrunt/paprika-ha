@@ -16,10 +16,15 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_PASSWORD, CONF_EMAIL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 
 
 from .api import PaprikaApi, PaprikaAuthenticationError
-from .const import CONF_RECIPE_DETAILS, DEFAULT_RECIPE_DETAILS, DOMAIN
+from .const import CONF_RECIPE_FORMAT, DEFAULT_RECIPE_FORMAT, DOMAIN, RECIPE_FORMATS
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -99,11 +104,17 @@ class PaprikaOptionsFlow(OptionsFlowWithReload):
             data_schema=vol.Schema(
                 {
                     vol.Required(
-                        CONF_RECIPE_DETAILS,
+                        CONF_RECIPE_FORMAT,
                         default=self.config_entry.options.get(
-                            CONF_RECIPE_DETAILS, DEFAULT_RECIPE_DETAILS
+                            CONF_RECIPE_FORMAT, DEFAULT_RECIPE_FORMAT
                         ),
-                    ): bool,
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=RECIPE_FORMATS,
+                            translation_key=CONF_RECIPE_FORMAT,
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    ),
                 }
             ),
         )

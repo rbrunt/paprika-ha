@@ -112,6 +112,7 @@ class PaprikaApi:
         self.access_token = token
         self.session = aiohttp.ClientSession("https://www.paprikaapp.com/api/v2/")
         self.session.headers["authorization"] = f"Bearer {self.access_token}"
+        self._recipe_cache: dict[RecipeID, Recipe] = {}
 
     @classmethod
     async def login(cls, email: str, password: str):
@@ -184,6 +185,34 @@ class PaprikaApi:
         response.raise_for_status()
         response_json = await response.json()
         return cast("Recipe", response_json["result"])
+
+    async def get_recipes(self, uids: set[RecipeID]) -> dict[RecipeID, Recipe]:
+        """
+        Get several recipes, re-fetching only those that are new or changed.
+
+        Unlike the other sync endpoints, recipes come one request per recipe, so
+        recipes are cached by the hash Paprika lists for each one. A recipe that
+        fails to fetch falls back to its cached copy, if there is one. Recipes no
+        longer asked for are dropped from the cache.
+        """
+        hashes = await self.get_recipe_hashes()
+        recipes: dict[RecipeID, Recipe] = {}
+        for uid in uids:
+            if uid not in hashes:
+                # A planned meal can point at a recipe that was deleted.
+                continue
+            cached = self._recipe_cache.get(uid)
+            if cached and cached.get("hash") == hashes[uid]:
+                recipes[uid] = cached
+                continue
+            try:
+                recipes[uid] = await self.get_recipe(uid)
+            except aiohttp.ClientError as err:
+                _LOGGER.warning("Could not fetch recipe %s: %s", uid, err)
+                if cached:
+                    recipes[uid] = cached
+        self._recipe_cache = recipes
+        return recipes
 
     async def get_groceries(self) -> list[GroceryListItem]:
         """Get grocery list items, for all lists."""

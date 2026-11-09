@@ -1,10 +1,12 @@
-"""Format Paprika recipes as HTML for calendar event descriptions."""
+"""Format Paprika recipes for calendar event descriptions."""
 
 from __future__ import annotations
 
 import re
 from html import escape
 from typing import TYPE_CHECKING
+
+from .const import RECIPE_FORMAT_HTML
 
 if TYPE_CHECKING:
     from .api import Recipe
@@ -106,3 +108,10 @@ def format_recipe_html(recipe: Recipe) -> str:
         )
 
     return "".join(sections)
+
+
+def format_recipe(recipe: Recipe, recipe_format: str) -> str:
+    """Format a recipe in the given format, or return "" for none or unknown."""
+    if recipe_format == RECIPE_FORMAT_HTML:
+        return format_recipe_html(recipe)
+    return ""

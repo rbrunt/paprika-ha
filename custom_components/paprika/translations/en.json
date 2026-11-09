@@ -22,11 +22,19 @@
             "init": {
                 "title": "Paprika options",
                 "data": {
-                    "recipe_details": "Show recipes in calendar events"
+                    "recipe_format": "Recipe in calendar events"
                 },
                 "data_description": {
-                    "recipe_details": "Adds each planned meal's ingredients, directions and source link to its calendar event as HTML. Best with calendar cards that render HTML, such as the Week Planner card; Home Assistant's own calendar shows the raw tags."
+                    "recipe_format": "How each planned meal's recipe (ingredients, directions and source link) is added to its calendar event. HTML works best with calendar cards that render it, such as the Week Planner card; Home Assistant's own calendar shows the raw tags."
                 }
+            }
+        }
+    },
+    "selector": {
+        "recipe_format": {
+            "options": {
+                "none": "None (meal name only)",
+                "html": "HTML"
             }
         }
     }

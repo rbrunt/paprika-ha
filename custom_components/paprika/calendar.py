@@ -7,7 +7,8 @@ from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .api import MealType, PlannedMeal
-from .recipe_format import format_recipe_html
+from .const import CONF_RECIPE_FORMAT, DEFAULT_RECIPE_FORMAT
+from .recipe_format import format_recipe
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -62,14 +63,17 @@ class PaprikaMealCalendar(CalendarEntity, CoordinatorEntity["PaprikaCoordinator"
             return None
 
     def _meal_event(self, meal: PlannedMeal) -> CalendarEvent:
-        """Build an all-day event, with the recipe as the description when there is one."""
+        """Build an all-day event, with the recipe as its description if configured."""
         recipe = self.coordinator.data.recipes.get(meal["recipe_uid"])
-        description = (format_recipe_html(recipe) if recipe else "") or meal["name"]
+        recipe_format = self.coordinator.config_entry.options.get(
+            CONF_RECIPE_FORMAT, DEFAULT_RECIPE_FORMAT
+        )
+        formatted = format_recipe(recipe, recipe_format) if recipe else ""
         return CalendarEvent(
             start=meal["date"],
             end=meal["date"] + timedelta(days=1),
             summary=meal["name"],
-            description=description,
+            description=formatted or meal["name"],
         )
 
     async def async_get_events(self, hass, start_date, end_date):

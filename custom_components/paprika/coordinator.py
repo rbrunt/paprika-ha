@@ -7,7 +7,7 @@ import aiohttp
 import homeassistant.util.dt
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_RECIPE_DETAILS, DEFAULT_RECIPE_DETAILS
+from .const import CONF_RECIPE_FORMAT, DEFAULT_RECIPE_FORMAT, RECIPE_FORMAT_NONE
 
 if TYPE_CHECKING:
     from .api import (
@@ -43,11 +43,6 @@ class PaprikaCoordinator(DataUpdateCoordinator[PaprikaData]):
 
     config_entry: "PaprikaConfigEntry"
     last_status: "SyncStatus | None" = None
-    _recipes: dict["RecipeID", "Recipe"]
-
-    def __init__(self, *args: Any, **kwargs: Any) -> None:
-        super().__init__(*args, **kwargs)
-        self._recipes = {}
 
     async def _async_update_data(self) -> Any:
         """Update data via library."""
@@ -65,10 +60,14 @@ class PaprikaCoordinator(DataUpdateCoordinator[PaprikaData]):
         meals = await self.config_entry.runtime_data.client.get_meals(meal_types)
         groceries = await self.config_entry.runtime_data.client.get_groceries()
         grocery_lists = await self.config_entry.runtime_data.client.get_grocery_lists()
-        show_recipes = self.config_entry.options.get(
-            CONF_RECIPE_DETAILS, DEFAULT_RECIPE_DETAILS
+        recipe_format = self.config_entry.options.get(
+            CONF_RECIPE_FORMAT, DEFAULT_RECIPE_FORMAT
         )
-        recipes = await self._async_update_recipes(meals) if show_recipes else {}
+        recipes = (
+            {}
+            if recipe_format == RECIPE_FORMAT_NONE
+            else await self._async_update_recipes(meals)
+        )
         return PaprikaData(
             status=current_status,
             meal_types=meal_types,
@@ -84,42 +83,18 @@ class PaprikaCoordinator(DataUpdateCoordinator[PaprikaData]):
         """
         Fetch the recipes behind recently planned meals.
 
-        Only recipes that are new or whose hash changed are fetched. A failure
-        here keeps the previously cached recipes rather than failing the update,
-        since the calendars still work without recipe details.
+        A failure here keeps the recipes from the last update rather than
+        failing it, since the calendars still work without recipe details.
         """
-        client = self.config_entry.runtime_data.client
         cutoff = homeassistant.util.dt.now().date() - RECIPE_LOOKBACK
         wanted = {
             m["recipe_uid"] for m in meals if m["recipe_uid"] and m["date"] >= cutoff
         }
-
         try:
-            hashes = await client.get_recipe_hashes()
+            return await self.config_entry.runtime_data.client.get_recipes(wanted)
         except aiohttp.ClientError as err:
-            _LOGGER.warning(
-                "Could not fetch recipe list, keeping cached recipes: %s", err
-            )
-            return {uid: r for uid, r in self._recipes.items() if uid in wanted}
-
-        recipes: dict[RecipeID, Recipe] = {}
-        for uid in wanted:
-            cached = self._recipes.get(uid)
-            if uid not in hashes:
-                # Planned meal points at a recipe that no longer exists.
-                continue
-            if cached and cached.get("hash") == hashes[uid]:
-                recipes[uid] = cached
-                continue
-            try:
-                recipes[uid] = await client.get_recipe(uid)
-            except aiohttp.ClientError as err:
-                _LOGGER.warning("Could not fetch recipe %s: %s", uid, err)
-                if cached:
-                    recipes[uid] = cached
-
-        self._recipes = recipes
-        return recipes
+            _LOGGER.warning("Could not fetch recipes, keeping the last ones: %s", err)
+            return self.data.recipes if self.data else {}
 
     async def async_save_grocery_items(
         self, items: list["GroceryListItem"]
