@@ -98,7 +98,7 @@ class PaprikaGroceryList(TodoListEntity, CoordinatorEntity["PaprikaCoordinator"]
             )
             if existing:
                 updated = existing.copy()
-                updated["purchased"] = True
+                updated["deleted"] = True
                 items_to_update.append(updated)
         if items_to_update:
             await self.coordinator.async_save_grocery_items(items_to_update)
