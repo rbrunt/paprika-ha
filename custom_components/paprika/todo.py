@@ -1,4 +1,3 @@
-import logging
 import uuid
 from typing import TYPE_CHECKING
 
@@ -13,8 +12,6 @@ if TYPE_CHECKING:
     from .api import GroceryList
     from .coordinator import PaprikaCoordinator
     from .data import PaprikaConfigEntry
-
-LOGGER = logging.getLogger(__name__)
 
 
 class PaprikaGroceryList(TodoListEntity, CoordinatorEntity["PaprikaCoordinator"]):
@@ -87,6 +84,7 @@ class PaprikaGroceryList(TodoListEntity, CoordinatorEntity["PaprikaCoordinator"]
             return
         updated = existing.copy()
         updated["name"] = item.summary
+        updated["ingredient"] = item.summary.lower()
         updated["quantity"] = item.description or ""
         updated["purchased"] = item.status == TodoItemStatus.COMPLETED
         await self.coordinator.async_save_grocery_items([updated])

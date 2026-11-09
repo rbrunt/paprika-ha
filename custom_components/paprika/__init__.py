@@ -44,4 +44,5 @@ async def async_setup_entry(hass: HomeAssistant, entry: PaprikaConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, entry: PaprikaConfigEntry) -> bool:
     """Unload a config entry."""
+    await entry.runtime_data.client.async_close()
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)
