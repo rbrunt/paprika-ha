@@ -1,0 +1,208 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = ">=3.12"
+# dependencies = ["questionary", "rich"]
+# ///
+import argparse
+import json
+import re
+import shutil
+import subprocess
+import sys
+from pathlib import Path
+
+import questionary
+from rich.console import Console
+from rich.panel import Panel
+from rich.table import Table
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+RELEASE_BRANCH = "main"
+PARTS = ("patch", "minor", "major")
+
+console = Console()
+
+
+def parse_args():
+    p = argparse.ArgumentParser(
+        description="Bump version in manifest.json, push it, and create a draft GitHub release"
+    )
+    p.add_argument(
+        "part",
+        nargs="?",
+        choices=PARTS,
+        help="Which part to bump (skips the menu)",
+    )
+    p.add_argument(
+        "--manifest",
+        default=str(REPO_ROOT / "custom_components/paprika/manifest.json"),
+        help="Path to manifest.json (default: the one in this repo)",
+    )
+    p.add_argument(
+        "--dry-run",
+        action="store_true",
+        help="Show what would happen but don't write, commit, push or release",
+    )
+    return p.parse_args()
+
+
+def bump_version(ver: str, part: str) -> str:
+    m = re.match(r"^(\d+)\.(\d+)\.(\d+)(.*)$", ver)
+    if not m:
+        raise ValueError(f"Version '{ver}' is not in X.Y.Z format")
+    major, minor, patch, suffix = m.groups()
+    major = int(major)
+    minor = int(minor)
+    patch = int(patch)
+    if part == "major":
+        major += 1
+        minor = 0
+        patch = 0
+    elif part == "minor":
+        minor += 1
+        patch = 0
+    else:
+        patch += 1
+    return f"{major}.{minor}.{patch}{suffix}"
+
+
+def run(*cmd: str) -> str:
+    result = subprocess.run(
+        cmd, cwd=REPO_ROOT, check=True, capture_output=True, text=True
+    )
+    return result.stdout.strip()
+
+
+def fail(message: str):
+    console.print(f"[bold red]Error:[/] {message}")
+    sys.exit(2)
+
+
+def check_repo_state():
+    if not shutil.which("gh"):
+        fail("The GitHub CLI (`gh`) is required to create the release")
+    branch = run("git", "branch", "--show-current")
+    if branch != RELEASE_BRANCH:
+        fail(f"Must be on '{RELEASE_BRANCH}' to release (currently on '{branch}')")
+    if run("git", "status", "--porcelain", "--untracked-files=no"):
+        fail("Working tree has uncommitted changes to tracked files")
+    run("git", "fetch", "origin", RELEASE_BRANCH)
+    if run("git", "rev-parse", "HEAD") != run(
+        "git", "rev-parse", f"origin/{RELEASE_BRANCH}"
+    ):
+        fail(f"'{RELEASE_BRANCH}' is not in sync with origin/{RELEASE_BRANCH}")
+
+
+def choose_part(current: str) -> str:
+    if not sys.stdin.isatty():
+        fail("Not an interactive terminal; pass patch, minor or major as an argument")
+    console.print(f"Current version: [bold]{current}[/]\n")
+    part = questionary.select(
+        "Which kind of release?",
+        choices=[
+            questionary.Choice(
+                f"{part:<6} {current} -> {bump_version(current, part)}", value=part
+            )
+            for part in PARTS
+        ],
+    ).ask()
+    if part is None:
+        raise KeyboardInterrupt
+    return part
+
+
+def confirm_release(manifest: Path, current: str, new: str, part: str) -> bool:
+    tag = f"v{new}"
+    summary = Table(show_header=False, box=None, padding=(0, 2))
+    summary.add_row("Release type", part)
+    summary.add_row("Before", f"[red]{current}[/]")
+    summary.add_row("After", f"[green]{new}[/]")
+    summary.add_row(
+        "Manifest",
+        str(
+            manifest.relative_to(REPO_ROOT)
+            if manifest.is_relative_to(REPO_ROOT)
+            else manifest
+        ),
+    )
+    console.print()
+    console.print(Panel(summary, title="Version change", expand=False))
+    console.print("Will then:")
+    console.print(f"  1. commit [bold]Bump version to {tag}[/] on {RELEASE_BRANCH}")
+    console.print(f"  2. push to origin/{RELEASE_BRANCH}")
+    console.print(f"  3. create a [bold]draft[/] GitHub release [bold]{tag}[/]\n")
+    answer = questionary.confirm("Proceed?", default=False).ask()
+    if answer is None:
+        raise KeyboardInterrupt
+    return answer
+
+
+def step(label: str, *cmd: str) -> str:
+    try:
+        with console.status(label):
+            out = run(*cmd)
+    except subprocess.CalledProcessError as e:
+        console.print(f"[red]✗[/] {label}")
+        console.print(e.stderr.strip())
+        fail(f"'{label}' failed; later steps were not run")
+    console.print(f"[green]✓[/] {label}")
+    return out
+
+
+def release(manifest: Path, tag: str):
+    step("Staging manifest", "git", "add", str(manifest))
+    step("Committing", "git", "commit", "-m", f"Bump version to {tag}")
+    step(f"Pushing to origin/{RELEASE_BRANCH}", "git", "push", "origin", RELEASE_BRANCH)
+    url = step(
+        "Creating draft release",
+        "gh",
+        "release",
+        "create",
+        tag,
+        "--draft",
+        "--title",
+        tag,
+        "--generate-notes",
+        "--target",
+        run("git", "rev-parse", "HEAD"),
+    )
+    console.print(f"\nDraft release ready, add your notes here:\n  [link]{url}[/link]")
+
+
+def main():
+    args = parse_args()
+    manifest = Path(args.manifest).resolve()
+    if not manifest.exists():
+        fail(f"Manifest file not found: {manifest}")
+    data = json.loads(manifest.read_text(encoding="utf-8"))
+    current = data.get("version")
+    if not current:
+        fail("No 'version' key found in manifest.json")
+
+    if not args.dry_run:
+        check_repo_state()
+
+    try:
+        part = args.part or choose_part(current)
+        new = bump_version(current, part)
+        if args.dry_run:
+            console.print(f"{manifest}: {current} -> {new} (dry run, nothing changed)")
+            return
+        if not confirm_release(manifest, current, new, part):
+            console.print("Aborted, nothing changed.")
+            return
+    except ValueError as e:
+        fail(str(e))
+    except KeyboardInterrupt:
+        console.print("\nAborted, nothing changed.")
+        sys.exit(130)
+
+    data["version"] = new
+    manifest.write_text(
+        json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
+    )
+    release(manifest, f"v{new}")
+
+
+if __name__ == "__main__":
+    main()
