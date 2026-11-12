@@ -75,3 +75,30 @@ class PaprikaCoordinator(DataUpdateCoordinator[PaprikaData]):
                 )
             )
         self.last_status = None
+
+    async def async_resolve_aisle(self, ingredient: str) -> tuple[str, str]:
+        """Look up the (aisle name, aisle uid) Paprika has for an ingredient.
+
+        Uses Paprika's learned ingredient mapping. Returns empty strings when
+        Paprika has no mapping for the ingredient, which leaves the item in
+        Miscellaneous.
+        """
+        client = self.config_entry.runtime_data.client
+        try:
+            ingredients = await client.get_grocery_ingredients()
+            aisles = await client.get_grocery_aisles()
+        except Exception:  # noqa: BLE001 - never block adding an item on a lookup
+            return "", ""
+        aisle_names = {a["uid"]: a["name"] for a in aisles}
+        by_name = {
+            i["name"].strip().lower(): i["aisle_uid"]
+            for i in ingredients
+            if i.get("aisle_uid") in aisle_names
+        }
+        key = ingredient.strip().lower()
+        for candidate in (key, key.removesuffix("s"), f"{key}s"):
+            if candidate in by_name:
+                uid = by_name[candidate]
+                return aisle_names[uid], uid
+        # Paprika hasn't learned this ingredient; leave it in Miscellaneous.
+        return "", ""
