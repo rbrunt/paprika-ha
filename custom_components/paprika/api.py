@@ -192,8 +192,8 @@ class PaprikaApi:
 
         Unlike the other sync endpoints, recipes come one request per recipe, so
         recipes are cached by the hash Paprika lists for each one. A recipe that
-        fails to fetch falls back to its cached copy, if there is one. Recipes no
-        longer asked for are dropped from the cache.
+        fails to fetch or times out falls back to its cached copy, if there is
+        one. Recipes no longer asked for are dropped from the cache.
         """
         hashes = await self.get_recipe_hashes()
         recipes: dict[RecipeID, Recipe] = {}
@@ -207,7 +207,7 @@ class PaprikaApi:
                 continue
             try:
                 recipes[uid] = await self.get_recipe(uid)
-            except aiohttp.ClientError as err:
+            except (aiohttp.ClientError, TimeoutError) as err:
                 _LOGGER.warning("Could not fetch recipe %s: %s", uid, err)
                 if cached:
                     recipes[uid] = cached

@@ -83,8 +83,8 @@ class PaprikaCoordinator(DataUpdateCoordinator[PaprikaData]):
         """
         Fetch the recipes behind recently planned meals.
 
-        A failure here keeps the recipes from the last update rather than
-        failing it, since the calendars still work without recipe details.
+        A failure or timeout here keeps the recipes from the last update rather
+        than failing it, since the calendars still work without recipe details.
         """
         cutoff = homeassistant.util.dt.now().date() - RECIPE_LOOKBACK
         wanted = {
@@ -92,7 +92,7 @@ class PaprikaCoordinator(DataUpdateCoordinator[PaprikaData]):
         }
         try:
             return await self.config_entry.runtime_data.client.get_recipes(wanted)
-        except aiohttp.ClientError as err:
+        except (aiohttp.ClientError, TimeoutError) as err:
             _LOGGER.warning("Could not fetch recipes, keeping the last ones: %s", err)
             return self.data.recipes if self.data else {}
 
