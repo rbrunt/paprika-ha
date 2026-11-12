@@ -16,5 +16,26 @@
                 }
             }
         }
+    },
+    "options": {
+        "step": {
+            "init": {
+                "title": "Paprika options",
+                "data": {
+                    "recipe_format": "Recipe in calendar events"
+                },
+                "data_description": {
+                    "recipe_format": "How each planned meal's recipe (ingredients, directions and source link) is added to its calendar event. HTML works best with calendar cards that render it, such as the Week Planner card; Home Assistant's own calendar shows the raw tags."
+                }
+            }
+        }
+    },
+    "selector": {
+        "recipe_format": {
+            "options": {
+                "none": "None (meal name only)",
+                "html": "HTML"
+            }
+        }
     }
 }

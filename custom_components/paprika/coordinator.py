@@ -1,11 +1,31 @@
-from dataclasses import dataclass
+import logging
+from dataclasses import dataclass, field
+from datetime import timedelta
 from typing import TYPE_CHECKING, Any
 
+import aiohttp
+import homeassistant.util.dt
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .const import CONF_RECIPE_FORMAT, DEFAULT_RECIPE_FORMAT, RECIPE_FORMAT_NONE
+
 if TYPE_CHECKING:
-    from .api import GroceryList, GroceryListItem, MealType, PlannedMeal, SyncStatus
+    from .api import (
+        GroceryList,
+        GroceryListItem,
+        MealType,
+        PlannedMeal,
+        Recipe,
+        RecipeID,
+        SyncStatus,
+    )
     from .data import PaprikaConfigEntry
+
+_LOGGER = logging.getLogger(__name__)
+
+# Recipes are only fetched for meals planned on or after this many days ago,
+# so a long meal-plan history doesn't mean fetching every recipe ever planned.
+RECIPE_LOOKBACK = timedelta(days=14)
 
 
 @dataclass
@@ -15,6 +35,7 @@ class PaprikaData:
     groceries: list["GroceryListItem"]
     meal_types: list["MealType"]
     grocery_lists: list["GroceryList"]
+    recipes: dict["RecipeID", "Recipe"] = field(default_factory=dict)
 
 
 class PaprikaCoordinator(DataUpdateCoordinator[PaprikaData]):
@@ -39,13 +60,41 @@ class PaprikaCoordinator(DataUpdateCoordinator[PaprikaData]):
         meals = await self.config_entry.runtime_data.client.get_meals(meal_types)
         groceries = await self.config_entry.runtime_data.client.get_groceries()
         grocery_lists = await self.config_entry.runtime_data.client.get_grocery_lists()
+        recipe_format = self.config_entry.options.get(
+            CONF_RECIPE_FORMAT, DEFAULT_RECIPE_FORMAT
+        )
+        recipes = (
+            {}
+            if recipe_format == RECIPE_FORMAT_NONE
+            else await self._async_update_recipes(meals)
+        )
         return PaprikaData(
             status=current_status,
             meal_types=meal_types,
             meals=meals,
             groceries=groceries,
             grocery_lists=grocery_lists,
+            recipes=recipes,
         )
+
+    async def _async_update_recipes(
+        self, meals: list["PlannedMeal"]
+    ) -> dict["RecipeID", "Recipe"]:
+        """
+        Fetch the recipes behind recently planned meals.
+
+        A failure or timeout here keeps the recipes from the last update rather
+        than failing it, since the calendars still work without recipe details.
+        """
+        cutoff = homeassistant.util.dt.now().date() - RECIPE_LOOKBACK
+        wanted = {
+            m["recipe_uid"] for m in meals if m["recipe_uid"] and m["date"] >= cutoff
+        }
+        try:
+            return await self.config_entry.runtime_data.client.get_recipes(wanted)
+        except (aiohttp.ClientError, TimeoutError) as err:
+            _LOGGER.warning("Could not fetch recipes, keeping the last ones: %s", err)
+            return self.data.recipes if self.data else {}
 
     async def async_save_grocery_items(
         self, items: list["GroceryListItem"]
@@ -72,6 +121,7 @@ class PaprikaCoordinator(DataUpdateCoordinator[PaprikaData]):
                     meals=self.data.meals,
                     groceries=groceries,
                     grocery_lists=self.data.grocery_lists,
+                    recipes=self.data.recipes,
                 )
             )
         self.last_status = None
