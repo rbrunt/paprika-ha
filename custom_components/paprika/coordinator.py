@@ -46,24 +46,19 @@ class PaprikaCoordinator(DataUpdateCoordinator[PaprikaData]):
     """Class to manage fetching data from the API."""
 
     config_entry: "PaprikaConfigEntry"
-    last_status: "SyncStatus | None" = None
 
     async def _async_update_data(self) -> Any:
-        """Update data via library."""
-        # Fetch current status to check if anything has changed
-        current_status = await self.config_entry.runtime_data.client.get_status()
+        """Update data via library.
 
-        # Only proceed with updating entities if status has changed
-        if self.last_status == current_status:
-            # Return the existing data without re-fetching
-            return self.data
-
-        # Status has changed, fetch updated data
-        self.last_status = current_status
-        meal_types = await self.config_entry.runtime_data.client.get_meal_types()
-        meals = await self.config_entry.runtime_data.client.get_meals(meal_types)
-        groceries = await self.config_entry.runtime_data.client.get_groceries()
-        grocery_lists = await self.config_entry.runtime_data.client.get_grocery_lists()
+        The client serves each entity from its cache unless that entity's sync
+        status counter moved, so a poll where nothing changed costs one request.
+        """
+        client = self.config_entry.runtime_data.client
+        current_status = await client.refresh_status()
+        meal_types = await client.get_meal_types()
+        meals = await client.get_meals(meal_types)
+        groceries = await client.get_groceries()
+        grocery_lists = await client.get_grocery_lists()
         recipe_format = self.config_entry.options.get(CONF_RECIPE_FORMAT, DEFAULT_RECIPE_FORMAT)
         recipes = (
             {} if recipe_format == RECIPE_FORMAT_NONE else await self._async_update_recipes(meals)
@@ -82,19 +77,15 @@ class PaprikaCoordinator(DataUpdateCoordinator[PaprikaData]):
 
         A failure or timeout here keeps the recipes from the last update rather
         than failing it, since the calendars still work without recipe details.
-        It also clears the last sync status, so the next poll retries instead of
-        waiting for something to change in Paprika.
+        The client caches only what it fetched, so the next poll retries the rest.
         """
         cutoff = homeassistant.util.dt.now().date() - RECIPE_LOOKBACK
         wanted = {m["recipe_uid"] for m in meals if m["recipe_uid"] and m["date"] >= cutoff}
         try:
-            recipes, complete = await self.config_entry.runtime_data.client.get_recipes(wanted)
+            recipes, _complete = await self.config_entry.runtime_data.client.get_recipes(wanted)
         except (aiohttp.ClientError, TimeoutError) as err:
             _LOGGER.warning("Could not fetch recipes, keeping the last ones: %s", err)
-            self.last_status = None
             return self.data.recipes if self.data else {}
-        if not complete:
-            self.last_status = None
         return recipes
 
     async def async_save_grocery_items(self, items: list["GroceryListItem"]) -> None:
@@ -123,7 +114,6 @@ class PaprikaCoordinator(DataUpdateCoordinator[PaprikaData]):
                     recipes=self.data.recipes,
                 )
             )
-        self.last_status = None
 
     async def async_resolve_aisle(self, ingredient: str) -> tuple[str, str]:
         """Look up the (aisle name, aisle uid) Paprika has for an ingredient.
@@ -135,6 +125,8 @@ class PaprikaCoordinator(DataUpdateCoordinator[PaprikaData]):
         client = self.config_entry.runtime_data.client
         try:
             async with asyncio.timeout(AISLE_LOOKUP_TIMEOUT):
+                # A fresh status means a mapping learned since the last poll is used.
+                await client.refresh_status()
                 ingredients = await client.get_grocery_ingredients()
                 aisles = await client.get_grocery_aisles()
         except Exception as err:  # never block adding an item on a lookup

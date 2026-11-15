@@ -5,7 +5,7 @@ Unofficial Home Assistant integration for Paprika Recipe Manager, distributed vi
 ## Layout
 
 - `api.py`: `PaprikaApi` (aiohttp) and `TypedDict` payload models.
-- `coordinator.py`: polls every 15 min; refetches only when `sync/status` changes.
+- `coordinator.py`: polls every 15 min. `PaprikaApi` refetches an entity only when its `sync/status` counter moves.
 - `calendar.py`, `todo.py`: meal plan calendars, grocery list todo lists.
 - `config_flow.py`, `strings.json`, `translations/en.json`: setup UI and text.
 - `manifest.json`: version set by `scripts/bump_version_and_release`. Don't edit by hand.
