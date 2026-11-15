@@ -1,42 +1,42 @@
 {
   "result": [
     {
-      "uid": "B3BABA6B-C217-BF22-3C08-A6E98A4A38E9",
+      "uid": "F9269D00-55DE-EA2F-EFE7-2DD6F7941A4B",
       "name": "Weeknights",
       "notes": "",
       "order_flag": 5,
       "days": 5
     },
     {
-      "uid": "7DBB475A-1A0C-98D5-058C-4FA0B1032820",
+      "uid": "05085315-70A1-8A71-B2E8-E1A17E970F5C",
       "name": "Batch Cook",
       "notes": "",
       "order_flag": 4,
       "days": 5
     },
     {
-      "uid": "1C54FD5C-A252-AFC2-B1D8-A79EE2395064",
+      "uid": "8C7A5BEA-1B7A-3434-8458-B2B772FCDDF6",
       "name": "Holiday",
       "notes": "",
       "order_flag": 1,
       "days": 1
     },
     {
-      "uid": "76119C3C-830D-5CAC-F405-A56817B5EB4C",
+      "uid": "2AAE2836-DC6E-C134-9BEE-638DFCCFE038",
       "name": "Weeknights 2",
       "notes": "",
       "order_flag": 6,
       "days": 5
     },
     {
-      "uid": "D530FED7-5DE7-C578-2947-C18125B4C2D3",
+      "uid": "1498F5CD-0D81-0BBE-6EDC-15C3EB3B636D",
       "name": "Batch Cook 2",
       "notes": "Note line 1.",
       "order_flag": 0,
       "days": 1
     },
     {
-      "uid": "91D47C99-3ACE-1051-2A0C-E74A64409972",
+      "uid": "30FEF0AE-5ADC-AC65-9E1D-219BC1DADC2F",
       "name": "Holiday 2",
       "notes": "",
       "order_flag": 3,

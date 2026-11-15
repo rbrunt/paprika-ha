@@ -24,7 +24,6 @@ import json
 import os
 import random
 import re
-import secrets
 import sys
 import urllib.request
 from collections.abc import Iterator
@@ -207,8 +206,21 @@ AISLES = [
     "Other",
 ]
 MIN_HEADER_LENGTH = 2  # an all-caps line longer than this is a section header
-MIN_NOTED_LENGTH = 4  # shorter originals ("1", "tsp") are too generic to count as leaks
-MIN_SUBSTRING_LEAK = 12  # long originals (URLs, uids) are also searched for as substrings
+MIN_NOTED_LENGTH = 3  # shorter originals ("1", "g") are too generic to count as leaks
+MIN_SUBSTRING_LEAK = 8  # longer originals are also searched for inside other values
+# Keys whose values are kept as captured: dates, times and quantities, not personal text.
+# Every other string in the raw data counts as identifying, including keys added later.
+PASS_THROUGH_KEYS = {
+    "date",
+    "created",
+    "servings",
+    "prep_time",
+    "cook_time",
+    "total_time",
+    "difficulty",
+    "color",
+    "quantity",
+}
 
 
 class Anonymiser:
@@ -225,6 +237,19 @@ class Anonymiser:
         """Remember an original value so the leak check can look for it."""
         if isinstance(value, str) and len(value.strip()) >= MIN_NOTED_LENGTH:
             self.originals.add(value.strip())
+
+    def note_all(self, value: object, key: str = "") -> None:
+        """Remember every string in a raw payload, except under PASS_THROUGH_KEYS."""
+        if isinstance(value, dict):
+            for k, v in value.items():
+                self.note_all(v, k)
+        elif isinstance(value, list):
+            for v in value:
+                self.note_all(v, key)
+        elif isinstance(value, str) and key not in PASS_THROUGH_KEYS:
+            self.note(value)
+            for line in value.splitlines():
+                self.note(line)
 
     def uid(self, value: str | None) -> str | None:
         """Map a uid to a stable fake uid, so cross-references still line up."""
@@ -258,7 +283,7 @@ class Anonymiser:
         if not value:
             return value
         self.note(value)
-        out = secrets.token_hex(len(value))[: len(value)]
+        out = f"{self.rng.getrandbits(4 * len(value)):0{len(value)}x}"
         return out.upper() if value.isupper() else out
 
     def text(self, value: str | None, kind: str) -> str | None:
@@ -386,6 +411,8 @@ def main() -> None:
         r = get(f"sync/recipe/{uid}", token)
         recipes_full.append(r)
     names = {r["uid"]: r["name"] for r in recipes_full}
+    a.note_all(raw)
+    a.note_all(recipes_full)
 
     out["meals"] = [
         {
@@ -511,12 +538,16 @@ def main() -> None:
     walk(out)
     blob = json.dumps(out, ensure_ascii=False)
     stand_ins = {v.lower() for pool in a.pools.values() for v in pool.values()}
+    # Stand-in words are generic by construction; an original that is just one of them
+    # (or part of one, like "tomatoes" in "tinned tomatoes") is not a leak.
+    vocabulary = " | ".join([*stand_ins, *DISHES, *INGREDIENTS, *AISLES]).lower()
     leaks = [
         s
         for s in a.originals
         if s.lower() not in stand_ins
         and not re.fullmatch(r"[\d\s./:-]+", s)
         and (s in values or (len(s) >= MIN_SUBSTRING_LEAK and s in blob))
+        and not (s.lower() in vocabulary and s not in values)
     ]
     if leaks:
 
@@ -537,6 +568,8 @@ def main() -> None:
         )
 
     OUT.mkdir(parents=True, exist_ok=True)
+    for stale in OUT.glob("recipe_*.json"):
+        stale.unlink()
     for name, payload in out.items():
         (OUT / f"{name}.json").write_text(
             json.dumps({"result": payload}, indent=2, ensure_ascii=False) + "\n"

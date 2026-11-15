@@ -5,8 +5,10 @@ with `scripts/capture_fixtures.py`. Each file is `{"result": ...}`, as the API r
 
 Shapes, types, nulls, dates and uid cross-references are real. Uids, names, recipe
 text, URLs, hashes and photo names are stand-ins, so values like aisle-to-item
-pairings are not meaningful. The script refuses to write if any original value
-survives. Re-run it to refresh; random hashes mean a re-run changes every file.
+pairings are not meaningful. Every string in the raw data counts as identifying
+except dates, times, servings and quantities, and the script refuses to write if
+any of them survives. Output is deterministic, so a re-run only changes what
+changed in the account.
 
 - `meals.json`: the latest 40 meals plus 3 from before 2025 (for the date cutoff).
 - `recipe_<uid>.json`: full recipes behind the most recent planned meals.
