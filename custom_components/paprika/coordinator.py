@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from dataclasses import dataclass, field
 from datetime import timedelta
@@ -26,6 +27,9 @@ _LOGGER = logging.getLogger(__name__)
 # Recipes are only fetched for meals planned on or after this many days ago,
 # so a long meal-plan history doesn't mean fetching every recipe ever planned.
 RECIPE_LOOKBACK = timedelta(days=14)
+
+# Adding an item waits on the aisle lookup, so don't let a slow API hold it up.
+AISLE_LOOKUP_TIMEOUT = 10  # seconds
 
 
 @dataclass
@@ -85,16 +89,24 @@ class PaprikaCoordinator(DataUpdateCoordinator[PaprikaData]):
 
         A failure or timeout here keeps the recipes from the last update rather
         than failing it, since the calendars still work without recipe details.
+        It also clears the last sync status, so the next poll retries instead of
+        waiting for something to change in Paprika.
         """
         cutoff = homeassistant.util.dt.now().date() - RECIPE_LOOKBACK
         wanted = {
             m["recipe_uid"] for m in meals if m["recipe_uid"] and m["date"] >= cutoff
         }
         try:
-            return await self.config_entry.runtime_data.client.get_recipes(wanted)
+            recipes, complete = await self.config_entry.runtime_data.client.get_recipes(
+                wanted
+            )
         except (aiohttp.ClientError, TimeoutError) as err:
             _LOGGER.warning("Could not fetch recipes, keeping the last ones: %s", err)
+            self.last_status = None
             return self.data.recipes if self.data else {}
+        if not complete:
+            self.last_status = None
+        return recipes
 
     async def async_save_grocery_items(
         self, items: list["GroceryListItem"]
@@ -135,9 +147,15 @@ class PaprikaCoordinator(DataUpdateCoordinator[PaprikaData]):
         """
         client = self.config_entry.runtime_data.client
         try:
-            ingredients = await client.get_grocery_ingredients()
-            aisles = await client.get_grocery_aisles()
-        except Exception:  # noqa: BLE001 - never block adding an item on a lookup
+            async with asyncio.timeout(AISLE_LOOKUP_TIMEOUT):
+                ingredients = await client.get_grocery_ingredients()
+                aisles = await client.get_grocery_aisles()
+        except Exception as err:  # noqa: BLE001 - never block adding an item on a lookup
+            _LOGGER.warning(
+                "Could not look up an aisle for %r, adding it without one: %r",
+                ingredient,
+                err,
+            )
             return "", ""
         aisle_names = {a["uid"]: a["name"] for a in aisles}
         by_name = {
@@ -151,4 +169,5 @@ class PaprikaCoordinator(DataUpdateCoordinator[PaprikaData]):
                 uid = by_name[candidate]
                 return aisle_names[uid], uid
         # Paprika hasn't learned this ingredient; leave it in Miscellaneous.
+        _LOGGER.debug("No learned aisle for %r", ingredient)
         return "", ""
