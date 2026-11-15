@@ -71,6 +71,10 @@ class FakePaprika:
         """Make `path` return an HTTP error status, or raise an exception, from now on."""
         self._failures[path] = error
 
+    def recover(self, path: str) -> None:
+        """Undo `fail`, so `path` is served normally again."""
+        self._failures.pop(path, None)
+
     def edit(self, entity: str, change: Any) -> None:
         """Change an entity's list as an edit in the app would, bumping its counter."""
         change(self.data[entity])

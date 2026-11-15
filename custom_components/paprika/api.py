@@ -5,7 +5,8 @@ import logging
 import uuid
 from datetime import date
 from enum import Enum
-from typing import NewType, Optional, TypedDict, cast
+from collections.abc import Awaitable, Callable
+from typing import Any, NewType, Optional, TypedDict, cast
 
 import aiohttp
 
@@ -122,6 +123,10 @@ class PaprikaApi:
         self.session = aiohttp.ClientSession("https://www.paprikaapp.com/api/v2/")
         self.session.headers["authorization"] = f"Bearer {self.access_token}"
         self._recipe_cache: dict[RecipeID, Recipe] = {}
+        # The last sync/status read, and each list endpoint's last result with the
+        # status counter it was read at. See _cached.
+        self._status: SyncStatus | None = None
+        self._cache: dict[str, tuple[int, Any]] = {}
 
     @classmethod
     async def login(cls, email: str, password: str) -> str:
@@ -141,11 +146,40 @@ class PaprikaApi:
 
             return json_response["result"]["token"]
 
-    async def get_meal_types(self) -> list[MealType]:
-        response = await self.session.get("sync/mealtypes")
+    async def refresh_status(self) -> SyncStatus:
+        """Read sync/status, so the get_* methods refetch only entities that changed."""
+        self._status = await self.get_status()
+        return self._status
+
+    async def _cached[T](self, entity: str, fetch: Callable[[], Awaitable[T]]) -> T:
+        """Return the last result for `entity` if its status counter hasn't moved.
+
+        Each sync/status counter is a revision number for one entity, and moves when
+        that entity changes (see tests/fixtures/README.md). A result is stored only
+        after a successful fetch, so a failed one is retried on the next call. Before
+        the first refresh_status, nothing is cached.
+        """
+        counter = self._status.get(entity) if self._status else None
+        if counter is None:
+            return await fetch()
+        hit = self._cache.get(entity)
+        if hit and hit[0] == counter:
+            return hit[1]
+        value = await fetch()
+        self._cache[entity] = (counter, value)
+        return value
+
+    async def _get_list(self, entity: str) -> list[dict]:
+        response = await self.session.get(f"sync/{entity}")
         response.raise_for_status()
         response_json = await response.json()
-        return [cast("MealType", item) for item in response_json["result"]]
+        return response_json["result"]
+
+    async def _get_cached_list(self, entity: str) -> list[Any]:
+        return await self._cached(entity, lambda: self._get_list(entity))
+
+    async def get_meal_types(self) -> list[MealType]:
+        return await self._get_cached_list("mealtypes")
 
     async def get_status(self) -> SyncStatus:
         """Get the sync status to check if any data has changed."""
@@ -155,12 +189,14 @@ class PaprikaApi:
         return cast("SyncStatus", response_json["result"])
 
     async def get_meals(self, meal_types: list[MealType]) -> list[PlannedMeal]:
+        """Get planned meals, each with its meal type attached.
+
+        The raw meals are cached, and the meal types attached on every call, so a
+        change to the meal types alone doesn't refetch meals.
+        """
         meal_types_by_id = {mt["uid"]: mt for mt in meal_types}
-        response = await self.session.get("sync/meals")
-        response.raise_for_status()
-        response_json = await response.json()
         meals: list[PlannedMeal] = []
-        for meal in response_json["result"]:
+        for meal in await self._get_cached_list("meals"):
             meal_date = date.fromisoformat(meal["date"][:10])
             # Skip meals before START_DATE_FILTER to avoid processing old data with bad ids (see issue #13)
             if meal_date < START_DATE_FILTER:
@@ -176,18 +212,13 @@ class PaprikaApi:
                     meal,
                 )
                 continue
-            meal["date"] = meal_date
-            meal["type"] = meal_type
-            meals.append(cast("PlannedMeal", meal))
+            meals.append(cast("PlannedMeal", {**meal, "date": meal_date, "type": meal_type}))
         _LOGGER.debug("Got %s meals from API", len(meals))
         return meals
 
     async def get_recipe_hashes(self) -> dict[RecipeID, str]:
         """Get the hash of every recipe, to tell which ones changed."""
-        response = await self.session.get("sync/recipes")
-        response.raise_for_status()
-        response_json = await response.json()
-        return {item["uid"]: item["hash"] for item in response_json["result"]}
+        return {item["uid"]: item["hash"] for item in await self._get_cached_list("recipes")}
 
     async def get_recipe(self, uid: RecipeID) -> Recipe:
         response = await self.session.get(f"sync/recipe/{uid}")
@@ -229,29 +260,17 @@ class PaprikaApi:
 
     async def get_groceries(self) -> list[GroceryListItem]:
         """Get grocery list items, for all lists."""
-        response = await self.session.get("sync/groceries")
-        response.raise_for_status()
-        response_json = await response.json()
-        return [cast("GroceryListItem", item) for item in response_json["result"]]
+        return await self._get_cached_list("groceries")
 
     async def get_grocery_lists(self) -> list[GroceryList]:
-        response = await self.session.get("sync/grocerylists")
-        response.raise_for_status()
-        response_json = await response.json()
-        return [cast("GroceryList", item) for item in response_json["result"]]
+        return await self._get_cached_list("grocerylists")
 
     async def get_grocery_aisles(self) -> list[GroceryAisle]:
-        response = await self.session.get("sync/groceryaisles")
-        response.raise_for_status()
-        response_json = await response.json()
-        return [cast("GroceryAisle", item) for item in response_json["result"]]
+        return await self._get_cached_list("groceryaisles")
 
     async def get_grocery_ingredients(self) -> list[GroceryIngredient]:
         """Get Paprika's ingredient name to aisle mapping."""
-        response = await self.session.get("sync/groceryingredients")
-        response.raise_for_status()
-        response_json = await response.json()
-        return [cast("GroceryIngredient", item) for item in response_json["result"]]
+        return await self._get_cached_list("groceryingredients")
 
     async def _post_sync(self, entity: str, payload: list | dict) -> None:
         json_bytes = json.dumps(payload).encode("utf-8")
@@ -277,4 +296,7 @@ class PaprikaApi:
         response.raise_for_status()
 
     async def save_grocery_items(self, items: list[GroceryListItem]) -> None:
+        # The server bumps the groceries counter for this anyway, but drop the cache
+        # so a read before the next refresh_status doesn't miss the change.
+        self._cache.pop("groceries", None)
         await self._post_sync("groceries", items)
