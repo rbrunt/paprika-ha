@@ -39,10 +39,6 @@ LIST_ENTITIES = (
     "meals",
     "mealtypes",
     "recipes",
-    "categories",
-    "photos",
-    "menus",
-    "menuitems",
 )
 
 

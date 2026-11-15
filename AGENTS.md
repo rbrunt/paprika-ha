@@ -18,7 +18,6 @@ uv manages the environment (`pyproject.toml`, `uv.lock`, `.python-version`). Run
 - `scripts/lint`: ruff format + fix. CI runs it in check mode.
 - `scripts/develop`: local Home Assistant using `config/`.
 - `uv run pytest`: tests. CI runs these too.
-- `scripts/capture_fixtures.py`: refresh `tests/fixtures/` from a real account (anonymised).
 
 ## Conventions
 

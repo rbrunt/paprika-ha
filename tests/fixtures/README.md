@@ -1,18 +1,18 @@
 # Test fixtures
 
-Anonymised `sync/*` payloads from a real Paprika account, captured on 2026-11-15
-with `scripts/capture_fixtures.py`. Each file is `{"result": ...}`, as the API returns it.
+Anonymised `sync/*` payloads from a real Paprika account, captured on 2026-11-15 and
+trimmed to the endpoints the integration uses. Each file is `{"result": ...}`, as the
+API returns it.
 
 Shapes, types, nulls, dates and uid cross-references are real. Uids, names, recipe
-text, URLs, hashes and photo names are stand-ins, so values like aisle-to-item
-pairings are not meaningful. Every string in the raw data counts as identifying
-except dates, times, servings and quantities, and the script refuses to write if
-any of them survives. Output is deterministic, so a re-run only changes what
-changed in the account.
+text, URLs and hashes are stand-ins, so values like aisle-to-item pairings are not
+meaningful. The capture script isn't committed; if the API changes shape, write a new
+one, and keep the output anonymised.
 
-- `meals.json`: the latest 40 meals plus 3 from before 2025 (for the date cutoff).
-- `recipe_<uid>.json`: full recipes behind the most recent planned meals.
-- `recipes.json`: uid/hash list for those recipes plus a few others.
+- `meals.json`: 2 meals from before 2025 (for the date cutoff) and 9 recent ones,
+  covering notes-only meals, more than one meal type, and a same-day pair.
+- `recipe_<uid>.json`: the full recipes behind 3 of those meals.
+- `recipes.json`: uid/hash list for those recipes plus 2 others.
 
 ## API behaviour verified against the live account (2026-11-15)
 
