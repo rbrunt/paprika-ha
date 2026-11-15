@@ -12,10 +12,15 @@ dev = [
     "homeassistant==2026.1.3",
     "ruff==0.17.4",
 ]
+test = [
+    "aioresponses>=0.7.9",
+    "pytest-homeassistant-custom-component==0.13.308",
+]
 
 [tool.uv]
 # Not a Python package; uv only manages the dev environment.
 package = false
+default-groups = ["dev", "test"]
 
 [tool.isort]
 # https://github.com/PyCQA/isort/wiki/isort-Settings
@@ -151,6 +156,13 @@ ignore = [
 
 fixable = ["ALL"]
 unfixable = []
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = [
+ "S101",  # pytest uses plain asserts
+ "D104",
+ "PLR0911",  # the fake API routes requests with early returns
+]
 
 
 [tool.ruff.lint.isort]
