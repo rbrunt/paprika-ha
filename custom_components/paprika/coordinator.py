@@ -137,7 +137,7 @@ class PaprikaCoordinator(DataUpdateCoordinator[PaprikaData]):
             async with asyncio.timeout(AISLE_LOOKUP_TIMEOUT):
                 ingredients = await client.get_grocery_ingredients()
                 aisles = await client.get_grocery_aisles()
-        except Exception as err:
+        except Exception as err:  # never block adding an item on a lookup
             _LOGGER.warning(
                 "Could not look up an aisle for %r, adding it without one: %r",
                 ingredient,
