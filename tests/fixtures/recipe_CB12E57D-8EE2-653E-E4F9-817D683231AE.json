@@ -1,0 +1,43 @@
+{
+  "result": {
+    "uid": "CB12E57D-8EE2-653E-E4F9-817D683231AE",
+    "name": "Mushroom Risotto",
+    "ingredients": "1 tin spinach\n\n½ tsp feta\n200 g yeast\n\n1 tin soy sauce\n200 g cinnamon\n1 tbsp soy sauce\n\n2 mushrooms\n\n1 apples\n½ tsp peppers",
+    "directions": "Step line 1.\n\n\nStep line 4.\n\nStep line 6.\n\nStep line 8.\n\nStep line 10.\n\nStep line 12.\n\nStep line 14.\n\nStep line 16.",
+    "description": "",
+    "notes": "",
+    "nutritional_info": "",
+    "servings": "4",
+    "servings_min": null,
+    "servings_max": null,
+    "difficulty": "Easy",
+    "prep_time": "",
+    "prep_minutes": null,
+    "cook_time": "",
+    "cook_minutes": null,
+    "total_time": "30 min",
+    "total_minutes": null,
+    "source": "example.com",
+    "source_url": "",
+    "image_url": "",
+    "photo": "CB12E57D-8EE2-653E-E4F9-817D683231AE.jpg",
+    "photo_hash": "505050497B506994AD908F19D46CBCFDF2CA4463AF81C5CAFA4870BE79BE121A",
+    "photo_large": "CB12E57D-8EE2-653E-E4F9-817D683231AE-large.jpg",
+    "scale": "",
+    "hash": "7C616F13AE2BEFE569EDEF5D56AFBF31B47EBD652E8DED8663DDD0D542C1910B",
+    "categories": [
+      "8D46F509-0BE3-6C33-3EF0-C9CB3E5D5D4D",
+      "2204F3F5-DA0C-B84D-AC70-B0082D254050"
+    ],
+    "rating": 4,
+    "in_trash": false,
+    "is_pinned": false,
+    "on_favorites": false,
+    "on_grocery_list": false,
+    "created": "2026-05-16 18:11:04",
+    "cookbook_uid": null,
+    "metadata_version": null,
+    "nutrition": null,
+    "photo_url": "https://example.com/photos/cb12e57d-8ee2-653e-e4f9-817d683231ae.jpg"
+  }
+}

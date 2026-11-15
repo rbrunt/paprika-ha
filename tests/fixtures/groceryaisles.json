@@ -1,0 +1,124 @@
+{
+  "result": [
+    {
+      "uid": "F43E8F29-AA3D-3A24-1DEA-08A70B6282EE",
+      "name": "Produce",
+      "order_flag": 6
+    },
+    {
+      "uid": "E4AE5D5A-2ECD-636F-5F1C-1B6FEC1DAA9D",
+      "name": "Dairy",
+      "order_flag": 2
+    },
+    {
+      "uid": "CE2B571F-5C60-D49F-D5DD-B540EAA6BCD6",
+      "name": "Bakery",
+      "order_flag": 9
+    },
+    {
+      "uid": "F33FABA9-CF14-1D5E-1708-2B6F9FAA2149",
+      "name": "Meat",
+      "order_flag": 10
+    },
+    {
+      "uid": "A976DBB8-E021-E9CC-704F-529F65B03E12",
+      "name": "Fish",
+      "order_flag": 0
+    },
+    {
+      "uid": "E40496AE-264B-282D-DA0C-7A7A74257F91",
+      "name": "Frozen",
+      "order_flag": 7
+    },
+    {
+      "uid": "930ADE73-0CBD-887C-3572-86CB2007F207",
+      "name": "Tins and Jars",
+      "order_flag": 11
+    },
+    {
+      "uid": "1814C60B-9183-D1CA-010C-8D5E5BDDE69E",
+      "name": "Pasta and Rice",
+      "order_flag": 15
+    },
+    {
+      "uid": "F9126B3D-F69A-EC5C-224A-2FC9725312DC",
+      "name": "Spices",
+      "order_flag": 5
+    },
+    {
+      "uid": "B0F4B729-84BC-3C24-73C9-17E9A9F611E6",
+      "name": "Baking",
+      "order_flag": 18
+    },
+    {
+      "uid": "F9841890-0DBF-2E26-1A35-C6D81DCA3732",
+      "name": "Drinks",
+      "order_flag": 8
+    },
+    {
+      "uid": "356EBD76-3BAA-F644-AC6D-D3273C1B5855",
+      "name": "Snacks",
+      "order_flag": 22
+    },
+    {
+      "uid": "6D6D0E24-9EEA-9D66-C7C4-B5C1A6D5AE3D",
+      "name": "Household",
+      "order_flag": 1
+    },
+    {
+      "uid": "8BC7ADB7-E202-13ED-2959-204099413106",
+      "name": "Toiletries",
+      "order_flag": 21
+    },
+    {
+      "uid": "935C656A-7D58-6DD4-7C0C-DAAA3115956B",
+      "name": "World Foods",
+      "order_flag": 20
+    },
+    {
+      "uid": "AF91F2D8-6D31-83FB-A476-BF5FB0A09F70",
+      "name": "Condiments",
+      "order_flag": 12
+    },
+    {
+      "uid": "3446E8FF-0D5C-DA51-46AD-964D2E3FC8EB",
+      "name": "Cereal",
+      "order_flag": 4
+    },
+    {
+      "uid": "6A484C9A-65AE-935D-1DD2-9BDB99B00F46",
+      "name": "Deli",
+      "order_flag": 17
+    },
+    {
+      "uid": "49F00137-83D2-66E4-55A9-0DA2B37060F2",
+      "name": "Health",
+      "order_flag": 3
+    },
+    {
+      "uid": "62CF3636-B9C3-B957-5D00-974AE8EBA3FC",
+      "name": "Pet",
+      "order_flag": 14
+    },
+    {
+      "uid": "9B9316A7-910A-0629-AC23-B1FB6F65F848",
+      "name": "Baby",
+      "order_flag": 23
+    },
+    {
+      "uid": "815563A5-1B83-D4BE-A678-B13E463BCCA4",
+      "name": "Alcohol",
+      "order_flag": 13
+    },
+    {
+      "uid": "18ABAA13-2106-1B05-6193-9C127E8C24BC",
+      "name": "Free From",
+      "order_flag": 16
+    },
+    {
+      "uid": "236A8052-AA41-7842-2E20-14BC3024496F",
+      "name": "Seasonal",
+      "order_flag": 19
+    }
+  ]
+}

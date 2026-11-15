@@ -1,0 +1,43 @@
+{
+  "result": {
+    "uid": "C4B2A1AD-2CCD-4D88-9654-8E639523686C",
+    "name": "Flapjacks",
+    "ingredients": "½ tsp cocoa\n1 apples\n2 chocolate\n3 oats\n200 g vinegar\n1 tin cumin\n½ tsp walnuts\n1 celery\n1 tbsp milk",
+    "directions": "Step line 1.\n\nStep line 3.\n\nStep line 5.\n\nStep line 7.",
+    "description": "",
+    "notes": "",
+    "nutritional_info": "Nutrition line 1.",
+    "servings": "4",
+    "servings_min": null,
+    "servings_max": null,
+    "difficulty": "",
+    "prep_time": "10 mins",
+    "prep_minutes": null,
+    "cook_time": "40 mins",
+    "cook_minutes": null,
+    "total_time": "",
+    "total_minutes": null,
+    "source": "example.com",
+    "source_url": "https://example.com/recipes/c4b2a1ad-2ccd-4d88-9654-8e639523686c",
+    "image_url": "https://example.com/images/c4b2a1ad-2ccd-4d88-9654-8e639523686c.jpg",
+    "photo": "C4B2A1AD-2CCD-4D88-9654-8E639523686C.jpg",
+    "photo_hash": "95a74e89807525b0ca5acfa2106bbdbfa9619f3f9bb3f7b0ae40f129e4028147",
+    "photo_large": null,
+    "scale": "1/1",
+    "hash": "C9BDF5B593B633FC3D82DEB07FD1F09B7FCAA806596FD53C57AC7D5C557C0A2F",
+    "categories": [
+      "EE0826DE-CE75-28F5-75AF-2E5FB5CA053B",
+      "F4641D7C-DA72-0ECF-A2D2-227965724DDC"
+    ],
+    "rating": 4,
+    "in_trash": false,
+    "is_pinned": false,
+    "on_favorites": false,
+    "on_grocery_list": false,
+    "created": "2021-06-11 15:57:45",
+    "cookbook_uid": null,
+    "metadata_version": null,
+    "nutrition": null,
+    "photo_url": "https://example.com/photos/c4b2a1ad-2ccd-4d88-9654-8e639523686c.jpg"
+  }
+}

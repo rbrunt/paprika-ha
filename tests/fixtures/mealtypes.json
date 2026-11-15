@@ -1,0 +1,49 @@
+{
+  "result": [
+    {
+      "uid": "77D1170E-0D65-FD0F-83DB-5387E70CFA2B",
+      "name": "Breakfast",
+      "order_flag": 2,
+      "color": "#2161C9",
+      "export_all_day": false,
+      "export_time": 64800,
+      "original_type": 2
+    },
+    {
+      "uid": "EAD8B88F-00E3-9D14-056E-9262BFCB0820",
+      "name": "Lunch",
+      "order_flag": 1,
+      "color": "#377118",
+      "export_all_day": false,
+      "export_time": 43200,
+      "original_type": 1
+    },
+    {
+      "uid": "CF5B2510-4D42-4FE4-2065-F764FE350A17",
+      "name": "Dinner",
+      "order_flag": 0,
+      "color": "#E36C0C",
+      "export_all_day": false,
+      "export_time": 28800,
+      "original_type": 0
+    },
+    {
+      "uid": "4B12E542-40E1-D671-5024-F29832956D0D",
+      "name": "Snack",
+      "order_flag": 4,
+      "color": "#008080",
+      "export_all_day": false,
+      "export_time": 0,
+      "original_type": 0
+    },
+    {
+      "uid": "9B9316A7-910A-0629-AC23-B1FB6F65F848",
+      "name": "Dessert",
+      "order_flag": 3,
+      "color": "#711D75",
+      "export_all_day": true,
+      "export_time": 0,
+      "original_type": 3
+    }
+  ]
+}
