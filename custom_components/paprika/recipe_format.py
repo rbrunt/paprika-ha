@@ -106,8 +106,8 @@ def format_recipe_html(recipe: Recipe) -> str:
     if source_url.startswith(("http://", "https://")):
         label = escape(recipe.get("source") or "Original recipe")
         sections.append(
-            f'<p><a href="{escape(source_url, quote=True)}" target="_blank">'
-            f"{label}</a></p>"
+            f'<p><a href="{escape(source_url, quote=True)}" target="_blank" '
+            f'rel="noopener noreferrer">{label}</a></p>'
         )
 
     return "".join(sections)
