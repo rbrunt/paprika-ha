@@ -64,13 +64,9 @@ class PaprikaCoordinator(DataUpdateCoordinator[PaprikaData]):
         meals = await self.config_entry.runtime_data.client.get_meals(meal_types)
         groceries = await self.config_entry.runtime_data.client.get_groceries()
         grocery_lists = await self.config_entry.runtime_data.client.get_grocery_lists()
-        recipe_format = self.config_entry.options.get(
-            CONF_RECIPE_FORMAT, DEFAULT_RECIPE_FORMAT
-        )
+        recipe_format = self.config_entry.options.get(CONF_RECIPE_FORMAT, DEFAULT_RECIPE_FORMAT)
         recipes = (
-            {}
-            if recipe_format == RECIPE_FORMAT_NONE
-            else await self._async_update_recipes(meals)
+            {} if recipe_format == RECIPE_FORMAT_NONE else await self._async_update_recipes(meals)
         )
         return PaprikaData(
             status=current_status,
@@ -81,11 +77,8 @@ class PaprikaCoordinator(DataUpdateCoordinator[PaprikaData]):
             recipes=recipes,
         )
 
-    async def _async_update_recipes(
-        self, meals: list["PlannedMeal"]
-    ) -> dict["RecipeID", "Recipe"]:
-        """
-        Fetch the recipes behind recently planned meals.
+    async def _async_update_recipes(self, meals: list["PlannedMeal"]) -> dict["RecipeID", "Recipe"]:
+        """Fetch the recipes behind recently planned meals.
 
         A failure or timeout here keeps the recipes from the last update rather
         than failing it, since the calendars still work without recipe details.
@@ -93,13 +86,9 @@ class PaprikaCoordinator(DataUpdateCoordinator[PaprikaData]):
         waiting for something to change in Paprika.
         """
         cutoff = homeassistant.util.dt.now().date() - RECIPE_LOOKBACK
-        wanted = {
-            m["recipe_uid"] for m in meals if m["recipe_uid"] and m["date"] >= cutoff
-        }
+        wanted = {m["recipe_uid"] for m in meals if m["recipe_uid"] and m["date"] >= cutoff}
         try:
-            recipes, complete = await self.config_entry.runtime_data.client.get_recipes(
-                wanted
-            )
+            recipes, complete = await self.config_entry.runtime_data.client.get_recipes(wanted)
         except (aiohttp.ClientError, TimeoutError) as err:
             _LOGGER.warning("Could not fetch recipes, keeping the last ones: %s", err)
             self.last_status = None
@@ -108,9 +97,7 @@ class PaprikaCoordinator(DataUpdateCoordinator[PaprikaData]):
             self.last_status = None
         return recipes
 
-    async def async_save_grocery_items(
-        self, items: list["GroceryListItem"]
-    ) -> None:
+    async def async_save_grocery_items(self, items: list["GroceryListItem"]) -> None:
         await self.config_entry.runtime_data.client.save_grocery_items(items)
         if self.data:
             groceries = list(self.data.groceries)
@@ -150,7 +137,7 @@ class PaprikaCoordinator(DataUpdateCoordinator[PaprikaData]):
             async with asyncio.timeout(AISLE_LOOKUP_TIMEOUT):
                 ingredients = await client.get_grocery_ingredients()
                 aisles = await client.get_grocery_aisles()
-        except Exception as err:  # noqa: BLE001 - never block adding an item on a lookup
+        except Exception as err:
             _LOGGER.warning(
                 "Could not look up an aisle for %r, adding it without one: %r",
                 ingredient,

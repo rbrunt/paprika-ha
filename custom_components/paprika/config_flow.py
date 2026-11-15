@@ -35,6 +35,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
+
 async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
@@ -51,7 +52,6 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     # throw CannotConnect
     # If the authentication is wrong:
     # InvalidAuth
-    
 
 
 class PaprikaConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -66,9 +66,7 @@ class PaprikaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Get the options flow for this handler."""
         return PaprikaOptionsFlow()
 
-    async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    async def async_step_user(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
@@ -92,9 +90,7 @@ class PaprikaConfigFlow(ConfigFlow, domain=DOMAIN):
 class PaprikaOptionsFlow(OptionsFlowWithReload):
     """Handle Paprika options. Saving reloads the entry so the change applies."""
 
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             return self.async_create_entry(data=user_input)

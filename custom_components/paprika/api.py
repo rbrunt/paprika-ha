@@ -11,9 +11,7 @@ import aiohttp
 
 _LOGGER = logging.getLogger(__name__)
 
-START_DATE_FILTER = date(
-    2025, 1, 1
-)  # Only process meals after this date (see issue #13)
+START_DATE_FILTER = date(2025, 1, 1)  # Only process meals after this date (see issue #13)
 
 MealId = NewType("MealId", str)
 RecipeID = NewType("RecipeID", str)
@@ -54,7 +52,7 @@ class PlannedMeal(TypedDict):
     name: str
     order_flag: int
     type_uid: str
-    scale: Optional[int]
+    scale: int | None
     is_ingredient: bool
 
 
@@ -197,11 +195,8 @@ class PaprikaApi:
         response_json = await response.json()
         return cast("Recipe", response_json["result"])
 
-    async def get_recipes(
-        self, uids: set[RecipeID]
-    ) -> tuple[dict[RecipeID, Recipe], bool]:
-        """
-        Get several recipes, re-fetching only those that are new or changed.
+    async def get_recipes(self, uids: set[RecipeID]) -> tuple[dict[RecipeID, Recipe], bool]:
+        """Get several recipes, re-fetching only those that are new or changed.
 
         Unlike the other sync endpoints, recipes come one request per recipe, so
         recipes are cached by the hash Paprika lists for each one. A recipe that
@@ -258,9 +253,7 @@ class PaprikaApi:
         response_json = await response.json()
         return [cast("GroceryIngredient", item) for item in response_json["result"]]
 
-    async def _post_sync(
-        self, entity: str, payload: list | dict
-    ) -> None:
+    async def _post_sync(self, entity: str, payload: list | dict) -> None:
         json_bytes = json.dumps(payload).encode("utf-8")
         compressed = io.BytesIO()
         with gzip.GzipFile(fileobj=compressed, mode="wb") as gz:
@@ -270,11 +263,11 @@ class PaprikaApi:
         boundary = str(uuid.uuid4())
         body = (
             f"--{boundary}\r\n"
-            f'Content-Disposition: form-data; name=data; filename=file; filename*=utf-8\'\'file\r\n'
+            f"Content-Disposition: form-data; name=data; filename=file; filename*=utf-8''file\r\n"
             f"\r\n"
-        ).encode("utf-8")
+        ).encode()
         body += compressed.read()
-        body += f"\r\n--{boundary}--\r\n".encode("utf-8")
+        body += f"\r\n--{boundary}--\r\n".encode()
 
         response = await self.session.post(
             f"sync/{entity}/",

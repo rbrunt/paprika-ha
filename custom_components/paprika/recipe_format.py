@@ -98,9 +98,7 @@ def format_recipe_html(recipe: Recipe) -> str:
         sections.append(f"<h3>Directions</h3>{directions}")
 
     if notes := (recipe.get("notes") or "").strip():
-        sections.append(
-            "<h3>Notes</h3><p>" + escape(notes).replace("\n", "<br>") + "</p>"
-        )
+        sections.append("<h3>Notes</h3><p>" + escape(notes).replace("\n", "<br>") + "</p>")
 
     source_url = recipe.get("source_url") or ""
     if source_url.startswith(("http://", "https://")):
