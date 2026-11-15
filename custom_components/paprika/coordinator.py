@@ -150,7 +150,12 @@ class PaprikaCoordinator(DataUpdateCoordinator[PaprikaData]):
             async with asyncio.timeout(AISLE_LOOKUP_TIMEOUT):
                 ingredients = await client.get_grocery_ingredients()
                 aisles = await client.get_grocery_aisles()
-        except Exception:  # noqa: BLE001 - never block adding an item on a lookup
+        except Exception as err:  # noqa: BLE001 - never block adding an item on a lookup
+            _LOGGER.warning(
+                "Could not look up an aisle for %r, adding it without one: %r",
+                ingredient,
+                err,
+            )
             return "", ""
         aisle_names = {a["uid"]: a["name"] for a in aisles}
         by_name = {
@@ -164,4 +169,5 @@ class PaprikaCoordinator(DataUpdateCoordinator[PaprikaData]):
                 uid = by_name[candidate]
                 return aisle_names[uid], uid
         # Paprika hasn't learned this ingredient; leave it in Miscellaneous.
+        _LOGGER.debug("No learned aisle for %r", ingredient)
         return "", ""
