@@ -3,7 +3,7 @@ import io
 import json
 import logging
 import uuid
-from datetime import date, datetime
+from datetime import date
 from enum import Enum
 from typing import NewType, Optional, TypedDict, cast
 
@@ -124,7 +124,7 @@ class PaprikaApi:
         self._recipe_cache: dict[RecipeID, Recipe] = {}
 
     @classmethod
-    async def login(cls, email: str, password: str):
+    async def login(cls, email: str, password: str) -> str:
         """Use a username and password to get a token that can be used to initialise the client for other calls."""
         async with aiohttp.ClientSession() as session:
             response = await session.post(
@@ -135,7 +135,7 @@ class PaprikaApi:
 
             if json_response.get("error"):
                 _LOGGER.error(
-                    f"Error from authentication endpoint: {json_response['error']['message']}"
+                    "Error from authentication endpoint: %s", json_response["error"]["message"]
                 )
                 raise PaprikaAuthenticationError(json_response["error"]["message"])
 
@@ -161,7 +161,7 @@ class PaprikaApi:
         response_json = await response.json()
         meals: list[PlannedMeal] = []
         for meal in response_json["result"]:
-            meal_date = datetime.strptime(meal["date"][:10], "%Y-%m-%d").date()
+            meal_date = date.fromisoformat(meal["date"][:10])
             # Skip meals before START_DATE_FILTER to avoid processing old data with bad ids (see issue #13)
             if meal_date < START_DATE_FILTER:
                 _LOGGER.debug("Skipping meal with date before cutoff: %s", meal)

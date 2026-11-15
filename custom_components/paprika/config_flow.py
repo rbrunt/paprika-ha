@@ -45,8 +45,8 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
     try:
         token = await PaprikaApi.login(data[CONF_EMAIL], data[CONF_PASSWORD])
         return {"token": token, "title": data[CONF_EMAIL]}
-    except PaprikaAuthenticationError:
-        raise InvalidAuth
+    except PaprikaAuthenticationError as err:
+        raise InvalidAuth from err
 
     # If you cannot connect:
     # throw CannotConnect
@@ -62,7 +62,7 @@ class PaprikaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
-    def async_get_options_flow(config_entry: ConfigEntry) -> PaprikaOptionsFlow:
+    def async_get_options_flow(config_entry: ConfigEntry) -> PaprikaOptionsFlow:  # noqa: ARG004 - HA API
         """Get the options flow for this handler."""
         return PaprikaOptionsFlow()
 
