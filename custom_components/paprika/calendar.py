@@ -7,6 +7,8 @@ from homeassistant.components.calendar import CalendarEntity, CalendarEvent
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .api import MealType, PlannedMeal
+from .const import CONF_RECIPE_FORMAT, DEFAULT_RECIPE_FORMAT
+from .recipe_format import format_recipe
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -17,6 +19,11 @@ if TYPE_CHECKING:
 
 
 LOGGER = logging.getLogger(__name__)
+
+
+def _in_plan_order(meals) -> list[PlannedMeal]:
+    """Sort by date, then by position within the day, so a main comes before its sides."""
+    return sorted(meals, key=lambda m: (m["date"], m.get("order_flag") or 0))
 
 
 class PaprikaMealCalendar(CalendarEntity, CoordinatorEntity["PaprikaCoordinator"]):
@@ -48,18 +55,26 @@ class PaprikaMealCalendar(CalendarEntity, CoordinatorEntity["PaprikaCoordinator"
 
         meals = filter(filter_by_type, self.coordinator.data.meals)
         today = homeassistant.util.dt.now().date()
-        meal = list(filter(lambda x: x["date"] == today, meals))
-        LOGGER.info(meals)
+        meal = _in_plan_order(m for m in meals if m["date"] == today)
         LOGGER.info(meal)
         if len(meal) >= 1:
-            return CalendarEvent(
-                start=meal[0]["date"],
-                end=meal[0]["date"] + timedelta(days=1),
-                summary=meal[0]["name"],
-                description=meal[0]["name"],
-            )
+            return self._meal_event(meal[0])
         else:
             return None
+
+    def _meal_event(self, meal: PlannedMeal) -> CalendarEvent:
+        """Build an all-day event, with the recipe as its description if configured."""
+        recipe = self.coordinator.data.recipes.get(meal["recipe_uid"])
+        recipe_format = self.coordinator.config_entry.options.get(
+            CONF_RECIPE_FORMAT, DEFAULT_RECIPE_FORMAT
+        )
+        formatted = format_recipe(recipe, recipe_format) if recipe else ""
+        return CalendarEvent(
+            start=meal["date"],
+            end=meal["date"] + timedelta(days=1),
+            summary=meal["name"],
+            description=formatted or meal["name"],
+        )
 
     async def async_get_events(self, hass, start_date, end_date):
         LOGGER.info("@@@ Getting events")
@@ -75,15 +90,7 @@ class PaprikaMealCalendar(CalendarEntity, CoordinatorEntity["PaprikaCoordinator"
         meals = filter(filter_by_type, self.coordinator.data.meals)
         meals_in_range = filter(filter_between_dates, meals)
 
-        return [
-            CalendarEvent(
-                start=m["date"],
-                end=m["date"] + timedelta(days=1),
-                summary=m["name"],
-                description=m["name"],
-            )
-            for m in meals_in_range
-        ]
+        return [self._meal_event(m) for m in _in_plan_order(meals_in_range)]
 
 
 class PaprikaAllMealsCalendar(CalendarEntity, CoordinatorEntity["PaprikaCoordinator"]):
