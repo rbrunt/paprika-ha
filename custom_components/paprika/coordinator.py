@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from dataclasses import dataclass, field
 from datetime import timedelta
@@ -26,6 +27,9 @@ _LOGGER = logging.getLogger(__name__)
 # Recipes are only fetched for meals planned on or after this many days ago,
 # so a long meal-plan history doesn't mean fetching every recipe ever planned.
 RECIPE_LOOKBACK = timedelta(days=14)
+
+# Adding an item waits on the aisle lookup, so don't let a slow API hold it up.
+AISLE_LOOKUP_TIMEOUT = 10  # seconds
 
 
 @dataclass
@@ -143,8 +147,9 @@ class PaprikaCoordinator(DataUpdateCoordinator[PaprikaData]):
         """
         client = self.config_entry.runtime_data.client
         try:
-            ingredients = await client.get_grocery_ingredients()
-            aisles = await client.get_grocery_aisles()
+            async with asyncio.timeout(AISLE_LOOKUP_TIMEOUT):
+                ingredients = await client.get_grocery_ingredients()
+                aisles = await client.get_grocery_aisles()
         except Exception:  # noqa: BLE001 - never block adding an item on a lookup
             return "", ""
         aisle_names = {a["uid"]: a["name"] for a in aisles}
