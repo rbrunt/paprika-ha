@@ -103,6 +103,9 @@ class FakePaprika:
             return self._login(kwargs.get("data"))
         path = url.path.removeprefix(API_V2).rstrip("/")
         self.requests.append((method, path))
+        headers = kwargs.get("headers") or {}
+        if headers.get("Authorization") != f"Bearer {TOKEN}":
+            return _error(401, "Unauthorized.")
 
         failure = self._failures.get(path)
         if isinstance(failure, BaseException):
@@ -118,8 +121,9 @@ class FakePaprika:
         if method == "GET" and entity.startswith("recipe/"):
             recipe = self.recipes.get(entity.removeprefix("recipe/"))
             return _ok(copy.deepcopy(recipe)) if recipe else _error(404, "Not found.")
-        if method == "POST" and entity == "groceries":
-            self._save_groceries(decode_sync_body(kwargs["data"]))
+        # Only the trailing-slash form of the POST URL has been verified.
+        if method == "POST" and entity == "groceries" and url.path.endswith("/"):
+            self._save_groceries(decode_sync_body(kwargs["data"], headers["Content-Type"]))
             return _ok(True)
         return _error(404, "Not found.")
 
@@ -131,6 +135,8 @@ class FakePaprika:
             }
         if form and form.get("email") == EMAIL and form.get("password") == PASSWORD:
             return _ok({"token": TOKEN})
+        # Unverified: the live status code for a bad login hasn't been checked. This copies
+        # what PaprikaApi.login handles, an `error` in the JSON body.
         return _error(200, "Invalid email or password.")
 
     def _save_groceries(self, items: list[dict]) -> None:
@@ -143,10 +149,16 @@ class FakePaprika:
             self.status["groceries"] += 1
 
 
-def decode_sync_body(body: bytes) -> Any:
-    """Undo PaprikaApi._post_sync: a multipart body wrapping gzipped JSON."""
-    _headers, _, rest = body.partition(b"\r\n\r\n")
-    payload, _, _closing = rest.rpartition(b"\r\n--")
+def decode_sync_body(body: bytes, content_type: str) -> Any:
+    """Undo PaprikaApi._post_sync: a multipart body, with the declared boundary, wrapping gzipped JSON."""
+    mime, _, boundary = content_type.partition("; boundary=")
+    assert mime == "multipart/form-data", content_type
+    opening, closing = f"--{boundary}\r\n".encode(), f"\r\n--{boundary}--\r\n".encode()
+    assert body.startswith(opening), "body doesn't open with the declared boundary"
+    assert body.endswith(closing), "body doesn't close with the declared boundary"
+    part = body.removeprefix(opening).removesuffix(closing)
+    part_headers, _, payload = part.partition(b"\r\n\r\n")
+    assert b"name=data" in part_headers, part_headers
     return json.loads(gzip.decompress(payload))
 
 

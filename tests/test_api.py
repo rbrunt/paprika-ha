@@ -1,9 +1,13 @@
 """Tests for PaprikaApi, run against the fake Paprika account."""
 
 from datetime import date
+from http import HTTPStatus
+from typing import Any
 import uuid
 
 import aiohttp
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
 import pytest
 
 from custom_components.paprika.api import (
@@ -19,6 +23,29 @@ async def test_requests_outside_paprika_are_refused(client: PaprikaApi) -> None:
     async with aiohttp.ClientSession() as session:
         with pytest.raises(aiohttp.ClientConnectionError, match="non-Paprika URL"):
             await session.get("https://example.com/")
+
+
+async def test_local_test_servers_are_reachable(
+    hass: HomeAssistant, hass_client_no_auth: Any
+) -> None:
+    """HA's own test clients talk to 127.0.0.1, which must not hit the refuse-all mock."""
+    assert await async_setup_component(hass, "http", {})
+    local = await hass_client_no_auth()
+
+    response = await local.get("/robots.txt")
+
+    assert response.status != HTTPStatus.SERVICE_UNAVAILABLE
+
+
+async def test_wrong_token_is_rejected(paprika: FakePaprika) -> None:
+    api = PaprikaApi("wrong-token")
+    try:
+        with pytest.raises(aiohttp.ClientResponseError) as err:
+            await api.get_status()
+    finally:
+        await api.async_close()
+
+    assert err.value.status == HTTPStatus.UNAUTHORIZED
 
 
 async def test_login_returns_token() -> None:
@@ -73,6 +100,7 @@ async def test_get_meals_skips_meal_with_unknown_type(
 ) -> None:
     """Regression test for #81: one bad meal must not break the rest."""
     bad = paprika.data["meals"][-1]
+    assert bad["date"] >= str(START_DATE_FILTER), "fixture's last meal should be after the cutoff"
     bad["type_uid"] = type_uid
 
     meals = await client.get_meals(await client.get_meal_types())

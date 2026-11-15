@@ -28,7 +28,8 @@ def auto_enable_custom_integrations(enable_custom_integrations: None) -> None:
 def paprika() -> Iterator[FakePaprika]:
     """The fake Paprika account that every request in a test is served from."""
     fake = FakePaprika()
-    with aioresponses() as mock:
+    # Local servers (hass_client, aiohttp_client) pass through; pytest-socket only allows those.
+    with aioresponses(passthrough=["http://127.0.0.1"]) as mock:
         for method in ("GET", "POST", "PUT", "DELETE"):
             mock.add(PAPRIKA_URL, method=method, callback=_bind(fake, method), repeat=True)
             mock.add(ANY_URL, method=method, callback=refuse, repeat=True)
