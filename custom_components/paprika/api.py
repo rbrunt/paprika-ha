@@ -226,20 +226,17 @@ class PaprikaApi:
         response_json = await response.json()
         return cast("Recipe", response_json["result"])
 
-    async def get_recipes(self, uids: set[RecipeID]) -> tuple[dict[RecipeID, Recipe], bool]:
+    async def get_recipes(self, uids: set[RecipeID]) -> dict[RecipeID, Recipe]:
         """Get several recipes, re-fetching only those that are new or changed.
 
         Unlike the other sync endpoints, recipes come one request per recipe, so
         recipes are cached by the hash Paprika lists for each one. A recipe that
         fails to fetch or times out falls back to its cached copy, if there is
-        one. Recipes no longer asked for are dropped from the cache.
-
-        Returns the recipes and whether every one was fetched successfully, so
-        the caller can retry later if any were missed.
+        one, and is retried on the next call because its hash still differs.
+        Recipes no longer asked for are dropped from the cache.
         """
         hashes = await self.get_recipe_hashes()
         recipes: dict[RecipeID, Recipe] = {}
-        complete = True
         for uid in uids:
             if uid not in hashes:
                 # A planned meal can point at a recipe that was deleted.
@@ -252,11 +249,10 @@ class PaprikaApi:
                 recipes[uid] = await self.get_recipe(uid)
             except (aiohttp.ClientError, TimeoutError) as err:
                 _LOGGER.warning("Could not fetch recipe %s: %s", uid, err)
-                complete = False
                 if cached:
                     recipes[uid] = cached
         self._recipe_cache = recipes
-        return recipes, complete
+        return recipes
 
     async def get_groceries(self) -> list[GroceryListItem]:
         """Get grocery list items, for all lists."""

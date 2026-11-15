@@ -154,20 +154,18 @@ async def test_get_recipes_fetches_each_recipe_once_until_it_changes(
 ) -> None:
     uids = set(paprika.recipes)
 
-    recipes, complete = await client.get_recipes(uids)
-    assert complete
+    recipes = await client.get_recipes(uids)
     assert set(recipes) == uids
     assert len([p for p in paprika.paths() if p.startswith("sync/recipe/")]) == len(uids)
 
     paprika.requests.clear()
-    _, complete = await client.get_recipes(uids)
-    assert complete
+    await client.get_recipes(uids)
     assert paprika.paths() == ["sync/recipes"]
 
     edited = next(iter(uids))
     paprika.edit_recipe(edited, name="Renamed")
     paprika.requests.clear()
-    recipes, _ = await client.get_recipes(uids)
+    recipes = await client.get_recipes(uids)
     assert paprika.paths() == ["sync/recipes", f"sync/recipe/{edited}"]
     assert recipes[edited]["name"] == "Renamed"
 
@@ -177,23 +175,21 @@ async def test_get_recipes_keeps_cached_copy_when_refetch_fails(
     client: PaprikaApi, paprika: FakePaprika, error: int | BaseException
 ) -> None:
     uid = next(iter(paprika.recipes))
-    first, _ = await client.get_recipes({uid})
+    first = await client.get_recipes({uid})
     paprika.edit_recipe(uid, name="Renamed")
     paprika.fail(f"sync/recipe/{uid}", error)
 
-    recipes, complete = await client.get_recipes({uid})
+    recipes = await client.get_recipes({uid})
 
-    assert not complete
     assert recipes[uid] == first[uid]
 
 
 async def test_get_recipes_skips_recipe_missing_from_account(
     client: PaprikaApi, paprika: FakePaprika
 ) -> None:
-    recipes, complete = await client.get_recipes({"DELETED-RECIPE"})
+    recipes = await client.get_recipes({"DELETED-RECIPE"})
 
     assert recipes == {}
-    assert complete
     assert paprika.paths() == ["sync/recipes"]
 
 
@@ -326,13 +322,12 @@ async def test_get_recipes_skips_recipe_list_when_counter_unchanged(
 ) -> None:
     uids = set(paprika.recipes)
     await client.refresh_status()
-    first, _ = await client.get_recipes(uids)
+    first = await client.get_recipes(uids)
     paprika.requests.clear()
 
     await client.refresh_status()
-    recipes, complete = await client.get_recipes(uids)
+    recipes = await client.get_recipes(uids)
 
-    assert complete
     assert recipes == first
     assert paprika.paths() == ["sync/status"]
 
@@ -343,14 +338,12 @@ async def test_get_recipes_retries_failed_recipe_while_counter_unchanged(
     uid = next(iter(paprika.recipes))
     await client.refresh_status()
     paprika.fail(f"sync/recipe/{uid}", 500)
-    _, complete = await client.get_recipes({uid})
-    assert not complete
+    assert uid not in await client.get_recipes({uid})
     paprika.recover(f"sync/recipe/{uid}")
     paprika.requests.clear()
 
     await client.refresh_status()
-    recipes, complete = await client.get_recipes({uid})
+    recipes = await client.get_recipes({uid})
 
-    assert complete
     assert uid in recipes
     assert paprika.paths() == ["sync/status", f"sync/recipe/{uid}"]

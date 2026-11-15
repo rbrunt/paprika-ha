@@ -82,7 +82,7 @@ class PaprikaCoordinator(DataUpdateCoordinator[PaprikaData]):
         cutoff = homeassistant.util.dt.now().date() - RECIPE_LOOKBACK
         wanted = {m["recipe_uid"] for m in meals if m["recipe_uid"] and m["date"] >= cutoff}
         try:
-            recipes, _complete = await self.config_entry.runtime_data.client.get_recipes(wanted)
+            recipes = await self.config_entry.runtime_data.client.get_recipes(wanted)
         except (aiohttp.ClientError, TimeoutError) as err:
             _LOGGER.warning("Could not fetch recipes, keeping the last ones: %s", err)
             return self.data.recipes if self.data else {}
