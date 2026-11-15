@@ -137,8 +137,11 @@ class PaprikaAllMealsCalendar(CalendarEntity, CoordinatorEntity["PaprikaCoordina
 
     def _format_meals_summary(self, meals: list[PlannedMeal]) -> str:
         """Format meals into a summary, grouping by meal type."""
-        # Sort meals by their export_time (order in the day)
-        sorted_meals = sorted(meals, key=lambda m: m["type"]["export_time"] or 0)
+        # Sort by meal type (order in the day), then by position within it
+        sorted_meals = sorted(
+            meals,
+            key=lambda m: (m["type"]["export_time"] or 0, m.get("order_flag") or 0),
+        )
 
         # Group meals by meal type
         meals_by_type = {}
