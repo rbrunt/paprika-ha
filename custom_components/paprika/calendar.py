@@ -27,6 +27,9 @@ def _in_plan_order(meals) -> list[PlannedMeal]:
 
 
 class PaprikaMealCalendar(CalendarEntity, CoordinatorEntity["PaprikaCoordinator"]):
+    # The description can hold a full HTML recipe; keep it out of the recorder.
+    _unrecorded_attributes = frozenset({"description"})
+
     def __init__(
         self,
         coordinator: "PaprikaCoordinator",
