@@ -1,3 +1,22 @@
+[project]
+name = "paprika-ha"
+version = "0.0.0"  # the release version lives in custom_components/paprika/manifest.json
+description = "Unofficial Home Assistant integration for Paprika Recipe Manager"
+requires-python = ">=3.13.2"
+dependencies = []
+
+[dependency-groups]
+dev = [
+    "colorlog==6.12.0",
+    # Must match the homeassistant key in hacs.json.
+    "homeassistant==2026.1.3",
+    "ruff==0.17.4",
+]
+
+[tool.uv]
+# Not a Python package; uv only manages the dev environment.
+package = false
+
 [tool.isort]
 # https://github.com/PyCQA/isort/wiki/isort-Settings
 profile = "black"
