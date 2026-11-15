@@ -10,6 +10,10 @@ on:
 permissions:
   contents: read
 
+env:
+  # Fail rather than re-resolve if uv.lock is out of date, including in `uv run`.
+  UV_LOCKED: 1
+
 jobs:
   lint:
     runs-on: ubuntu-latest
@@ -18,12 +22,12 @@ jobs:
       - uses: astral-sh/setup-uv@v10.3.3
         with:
           enable-cache: true
-      - run: uv sync --locked
+      - run: uv sync --only-group lint
       - name: Check formatting
-        run: uv run ruff format --check --diff .
+        run: uv run --only-group lint ruff format --check --diff .
       - name: Lint
         # pyproject sets `fix = true` for local use; CI must only report.
-        run: uv run ruff check --no-fix .
+        run: uv run --only-group lint ruff check --no-fix .
 
   test:
     runs-on: ubuntu-latest
@@ -32,5 +36,5 @@ jobs:
       - uses: astral-sh/setup-uv@v10.3.3
         with:
           enable-cache: true
-      - run: uv sync --locked
+      - run: uv sync
       - run: uv run pytest
