@@ -1,0 +1,44 @@
+{
+  "result": [
+    {
+      "uid": "9B0E9C6A-398B-82A1-FF95-9CF7F62FA2FE",
+      "name": "carrot",
+      "aisle_uid": "3446E8FF-0D5C-DA51-46AD-964D2E3FC8EB"
+    },
+    {
+      "uid": "90AE000C-AD64-4B63-D8F0-B984208C7784",
+      "name": "celery",
+      "aisle_uid": "236A8052-AA41-7842-2E20-14BC3024496F"
+    },
+    {
+      "uid": "F28114E3-2BF2-5B74-8DBD-5641455829E8",
+      "name": "spinach",
+      "aisle_uid": "6A484C9A-65AE-935D-1DD2-9BDB99B00F46"
+    },
+    {
+      "uid": "9B4FF876-21A2-8426-8469-804DE8AB05B6",
+      "name": "lime",
+      "aisle_uid": "935C656A-7D58-6DD4-7C0C-DAAA3115956B"
+    },
+    {
+      "uid": "4C3D2768-1CCD-70B2-CBA4-59BD35CA4F14",
+      "name": "eggs",
+      "aisle_uid": "236A8052-AA41-7842-2E20-14BC3024496F"
+    },
+    {
+      "uid": "103C2265-BEFB-0D44-CED0-AB706108F686",
+      "name": "flour",
+      "aisle_uid": "236A8052-AA41-7842-2E20-14BC3024496F"
+    },
+    {
+      "uid": "2231DD5F-C8BB-CF34-2B6A-240128F82902",
+      "name": "sugar",
+      "aisle_uid": "236A8052-AA41-7842-2E20-14BC3024496F"
+    },
+    {
+      "uid": "3FE1463B-4CB8-136E-6462-0ECE79477FBB",
+      "name": "onion",
+      "aisle_uid": null
+    }
+  ]
+}

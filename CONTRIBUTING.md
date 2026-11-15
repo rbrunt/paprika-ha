@@ -56,6 +56,11 @@ Home Assistant instance running and already configured with the included
 [`configuration.yaml`](./config/configuration.yaml)
 file.
 
+Outside the container, install [uv](https://docs.astral.sh/uv/) and run `scripts/setup`.
+It creates `.venv` with the Python version in `.python-version` and the dependencies
+locked in `uv.lock`. Add or change dependencies with `uv add --group dev <package>`,
+which updates `pyproject.toml` and `uv.lock` together.
+
 ## License
 
 By contributing, you agree that your contributions will be licensed under its MIT License.

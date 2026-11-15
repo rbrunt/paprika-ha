@@ -1,0 +1,349 @@
+"""Tests for PaprikaApi, run against the fake Paprika account."""
+
+from datetime import date
+from http import HTTPStatus
+from typing import Any
+import uuid
+
+import aiohttp
+from homeassistant.core import HomeAssistant
+from homeassistant.setup import async_setup_component
+import pytest
+
+from custom_components.paprika.api import (
+    START_DATE_FILTER,
+    PaprikaApi,
+    PaprikaAuthenticationError,
+)
+
+from .fake_paprika import EMAIL, PASSWORD, TOKEN, FakePaprika
+
+
+async def test_requests_outside_paprika_are_refused(client: PaprikaApi) -> None:
+    async with aiohttp.ClientSession() as session:
+        with pytest.raises(aiohttp.ClientConnectionError, match="non-Paprika URL"):
+            await session.get("https://example.com/")
+
+
+async def test_local_test_servers_are_reachable(
+    hass: HomeAssistant, hass_client_no_auth: Any
+) -> None:
+    """HA's own test clients talk to 127.0.0.1, which must not hit the refuse-all mock."""
+    assert await async_setup_component(hass, "http", {})
+    local = await hass_client_no_auth()
+
+    response = await local.get("/robots.txt")
+
+    assert response.status != HTTPStatus.SERVICE_UNAVAILABLE
+
+
+async def test_wrong_token_is_rejected(paprika: FakePaprika) -> None:
+    api = PaprikaApi("wrong-token")
+    try:
+        with pytest.raises(aiohttp.ClientResponseError) as err:
+            await api.get_status()
+    finally:
+        await api.async_close()
+
+    assert err.value.status == HTTPStatus.UNAUTHORIZED
+
+
+async def test_login_returns_token() -> None:
+    assert await PaprikaApi.login(EMAIL, PASSWORD) == TOKEN
+
+
+async def test_login_with_wrong_password_raises() -> None:
+    with pytest.raises(PaprikaAuthenticationError):
+        await PaprikaApi.login(EMAIL, "wrong")
+
+
+async def test_get_status_returns_counters(client: PaprikaApi, paprika: FakePaprika) -> None:
+    status = await client.get_status()
+
+    assert status == paprika.status
+    assert paprika.paths() == ["sync/status"]
+
+
+async def test_http_error_raises(client: PaprikaApi, paprika: FakePaprika) -> None:
+    paprika.fail("sync/groceries", 500)
+
+    with pytest.raises(aiohttp.ClientResponseError):
+        await client.get_groceries()
+
+
+async def test_get_meals_parses_date_and_attaches_meal_type(client: PaprikaApi) -> None:
+    meal_types = await client.get_meal_types()
+    meals = await client.get_meals(meal_types)
+
+    assert meals
+    by_uid = {t["uid"]: t for t in meal_types}
+    for meal in meals:
+        assert isinstance(meal["date"], date)
+        assert meal["type"] == by_uid[meal["type_uid"]]
+
+
+async def test_get_meals_skips_meals_before_cutoff(
+    client: PaprikaApi, paprika: FakePaprika
+) -> None:
+    old = [m["uid"] for m in paprika.data["meals"] if m["date"] < str(START_DATE_FILTER)]
+    assert old, "fixture should include meals from before the cutoff"
+
+    meals = await client.get_meals(await client.get_meal_types())
+
+    assert not {m["uid"] for m in meals} & set(old)
+    assert all(m["date"] >= START_DATE_FILTER for m in meals)
+
+
+@pytest.mark.parametrize("type_uid", [None, "UNKNOWN-TYPE"])
+async def test_get_meals_skips_meal_with_unknown_type(
+    client: PaprikaApi, paprika: FakePaprika, type_uid: str | None
+) -> None:
+    """Regression test for #81: one bad meal must not break the rest."""
+    bad = paprika.data["meals"][-1]
+    assert bad["date"] >= str(START_DATE_FILTER), "fixture's last meal should be after the cutoff"
+    bad["type_uid"] = type_uid
+
+    meals = await client.get_meals(await client.get_meal_types())
+
+    uids = {m["uid"] for m in meals}
+    assert bad["uid"] not in uids
+    assert len(uids) > 0
+
+
+async def test_save_grocery_items_posts_gzipped_payload(
+    client: PaprikaApi, paprika: FakePaprika
+) -> None:
+    list_uid = paprika.data["grocerylists"][0]["uid"]
+    item = {
+        "uid": str(uuid.uuid4()).upper(),
+        "recipe_uid": None,
+        "name": "test item",
+        "order_flag": 0,
+        "purchased": False,
+        "aisle": "",
+        "ingredient": "test item",
+        "recipe": "",
+        "instruction": "",
+        "quantity": "",
+        "separate": False,
+        "aisle_uid": "",
+        "list_uid": list_uid,
+    }
+    before = paprika.status["groceries"]
+
+    await client.save_grocery_items([item])
+
+    assert paprika.paths("POST") == ["sync/groceries"]
+    assert paprika.posted["groceries"] == [[item]]
+    assert item in await client.get_groceries()
+    assert paprika.status["groceries"] == before + 1
+
+
+async def test_save_grocery_items_with_deleted_flag_removes_item(
+    client: PaprikaApi, paprika: FakePaprika
+) -> None:
+    item = (await client.get_groceries())[0]
+
+    await client.save_grocery_items([{**item, "deleted": True}])
+
+    assert item["uid"] not in {g["uid"] for g in await client.get_groceries()}
+
+
+async def test_get_recipes_fetches_each_recipe_once_until_it_changes(
+    client: PaprikaApi, paprika: FakePaprika
+) -> None:
+    uids = set(paprika.recipes)
+
+    recipes = await client.get_recipes(uids)
+    assert set(recipes) == uids
+    assert len([p for p in paprika.paths() if p.startswith("sync/recipe/")]) == len(uids)
+
+    paprika.requests.clear()
+    await client.get_recipes(uids)
+    assert paprika.paths() == ["sync/recipes"]
+
+    edited = next(iter(uids))
+    paprika.edit_recipe(edited, name="Renamed")
+    paprika.requests.clear()
+    recipes = await client.get_recipes(uids)
+    assert paprika.paths() == ["sync/recipes", f"sync/recipe/{edited}"]
+    assert recipes[edited]["name"] == "Renamed"
+
+
+@pytest.mark.parametrize("error", [500, TimeoutError()])
+async def test_get_recipes_keeps_cached_copy_when_refetch_fails(
+    client: PaprikaApi, paprika: FakePaprika, error: int | BaseException
+) -> None:
+    uid = next(iter(paprika.recipes))
+    first = await client.get_recipes({uid})
+    paprika.edit_recipe(uid, name="Renamed")
+    paprika.fail(f"sync/recipe/{uid}", error)
+
+    recipes = await client.get_recipes({uid})
+
+    assert recipes[uid] == first[uid]
+
+
+async def test_get_recipes_skips_recipe_missing_from_account(
+    client: PaprikaApi, paprika: FakePaprika
+) -> None:
+    recipes = await client.get_recipes({"DELETED-RECIPE"})
+
+    assert recipes == {}
+    assert paprika.paths() == ["sync/recipes"]
+
+
+async def _read_everything(client: PaprikaApi) -> None:
+    """Call every getter the coordinator uses, as one poll would."""
+    meal_types = await client.get_meal_types()
+    await client.get_meals(meal_types)
+    await client.get_groceries()
+    await client.get_grocery_lists()
+    await client.get_grocery_aisles()
+    await client.get_grocery_ingredients()
+    await client.get_recipe_hashes()
+
+
+async def test_unchanged_status_serves_every_list_from_cache(
+    client: PaprikaApi, paprika: FakePaprika
+) -> None:
+    await client.refresh_status()
+    await _read_everything(client)
+    paprika.requests.clear()
+
+    await client.refresh_status()
+    await _read_everything(client)
+
+    assert paprika.paths() == ["sync/status"]
+
+
+async def test_reads_before_refresh_status_are_not_cached(
+    client: PaprikaApi, paprika: FakePaprika
+) -> None:
+    await client.get_groceries()
+    await client.get_groceries()
+
+    assert paprika.paths() == ["sync/groceries", "sync/groceries"]
+
+
+@pytest.mark.parametrize(
+    "entity",
+    [
+        "groceries",
+        "grocerylists",
+        "groceryaisles",
+        "groceryingredients",
+        "meals",
+        "mealtypes",
+        "recipes",
+    ],
+)
+async def test_changed_counter_refetches_only_that_entity(
+    client: PaprikaApi, paprika: FakePaprika, entity: str
+) -> None:
+    await client.refresh_status()
+    await _read_everything(client)
+    paprika.edit(entity, lambda items: items.pop())
+    paprika.requests.clear()
+
+    await client.refresh_status()
+    await _read_everything(client)
+
+    assert paprika.paths() == ["sync/status", f"sync/{entity}"]
+
+
+async def test_changed_counter_returns_new_content(
+    client: PaprikaApi, paprika: FakePaprika
+) -> None:
+    await client.refresh_status()
+    first = await client.get_groceries()
+    paprika.edit("groceries", lambda items: items[0].update(name="renamed"))
+
+    await client.refresh_status()
+    second = await client.get_groceries()
+
+    assert first[0]["name"] != "renamed"
+    assert second[0]["name"] == "renamed"
+
+
+@pytest.mark.parametrize("error", [500, TimeoutError()])
+async def test_failed_fetch_is_not_cached_and_is_retried(
+    client: PaprikaApi, paprika: FakePaprika, error: int | BaseException
+) -> None:
+    await client.refresh_status()
+    paprika.fail("sync/groceries", error)
+    with pytest.raises((aiohttp.ClientResponseError, TimeoutError)):
+        await client.get_groceries()
+    paprika.recover("sync/groceries")
+    paprika.requests.clear()
+
+    await client.refresh_status()
+    groceries = await client.get_groceries()
+
+    assert groceries == paprika.data["groceries"]
+    assert paprika.paths() == ["sync/status", "sync/groceries"]
+
+
+async def test_save_grocery_items_invalidates_groceries_cache(
+    client: PaprikaApi, paprika: FakePaprika
+) -> None:
+    await client.refresh_status()
+    item = (await client.get_groceries())[0]
+    paprika.requests.clear()
+
+    await client.save_grocery_items([{**item, "purchased": not item["purchased"]}])
+    groceries = await client.get_groceries()
+
+    assert paprika.paths() == ["sync/groceries"]
+    saved = next(g for g in groceries if g["uid"] == item["uid"])
+    assert saved["purchased"] is not item["purchased"]
+
+
+async def test_meal_type_change_rederives_cached_meals(
+    client: PaprikaApi, paprika: FakePaprika
+) -> None:
+    await client.refresh_status()
+    type_uid = (await client.get_meals(await client.get_meal_types()))[0]["type_uid"]
+    paprika.edit(
+        "mealtypes",
+        lambda types: next(t for t in types if t["uid"] == type_uid).update(name="Renamed"),
+    )
+    paprika.requests.clear()
+
+    await client.refresh_status()
+    meals = await client.get_meals(await client.get_meal_types())
+
+    assert paprika.paths() == ["sync/status", "sync/mealtypes"]
+    assert {m["type"]["name"] for m in meals if m["type_uid"] == type_uid} == {"Renamed"}
+
+
+async def test_get_recipes_skips_recipe_list_when_counter_unchanged(
+    client: PaprikaApi, paprika: FakePaprika
+) -> None:
+    uids = set(paprika.recipes)
+    await client.refresh_status()
+    first = await client.get_recipes(uids)
+    paprika.requests.clear()
+
+    await client.refresh_status()
+    recipes = await client.get_recipes(uids)
+
+    assert recipes == first
+    assert paprika.paths() == ["sync/status"]
+
+
+async def test_get_recipes_retries_failed_recipe_while_counter_unchanged(
+    client: PaprikaApi, paprika: FakePaprika
+) -> None:
+    uid = next(iter(paprika.recipes))
+    await client.refresh_status()
+    paprika.fail(f"sync/recipe/{uid}", 500)
+    assert uid not in await client.get_recipes({uid})
+    paprika.recover(f"sync/recipe/{uid}")
+    paprika.requests.clear()
+
+    await client.refresh_status()
+    recipes = await client.get_recipes({uid})
+
+    assert uid in recipes
+    assert paprika.paths() == ["sync/status", f"sync/recipe/{uid}"]

@@ -1,0 +1,43 @@
+{
+  "result": {
+    "uid": "C4B2A1AD-2CCD-4D88-9654-8E639523686C",
+    "name": "Flapjacks",
+    "ingredients": "1 ketchup\n1 tin thyme\n2 bread\n1 tbsp peppers\n3 parmesan\n200 g baking powder\n3 thyme\n½ tsp pine nuts\n3 yeast",
+    "directions": "Step line 1.\n\nStep line 3.\n\nStep line 5.\n\nStep line 7.",
+    "description": "",
+    "notes": "",
+    "nutritional_info": "Nutrition line 1.",
+    "servings": "4",
+    "servings_min": null,
+    "servings_max": null,
+    "difficulty": "",
+    "prep_time": "10 mins",
+    "prep_minutes": null,
+    "cook_time": "40 mins",
+    "cook_minutes": null,
+    "total_time": "",
+    "total_minutes": null,
+    "source": "example.com",
+    "source_url": "https://example.com/recipes/c4b2a1ad-2ccd-4d88-9654-8e639523686c",
+    "image_url": "https://example.com/images/c4b2a1ad-2ccd-4d88-9654-8e639523686c.jpg",
+    "photo": "C4B2A1AD-2CCD-4D88-9654-8E639523686C.jpg",
+    "photo_hash": "bafc1f6bb965b05471fdb27083ab69207aee13bbd3fca1ca7b29ce4e965338fb",
+    "photo_large": null,
+    "scale": "1/1",
+    "hash": "C4E4FEC9B065BB3085714AC2F08AED09F0954D9A589FAAA232BC9AC4CD92BCCD",
+    "categories": [
+      "EE0826DE-CE75-28F5-75AF-2E5FB5CA053B",
+      "F4641D7C-DA72-0ECF-A2D2-227965724DDC"
+    ],
+    "rating": 4,
+    "in_trash": false,
+    "is_pinned": false,
+    "on_favorites": false,
+    "on_grocery_list": false,
+    "created": "2021-06-11 15:57:45",
+    "cookbook_uid": null,
+    "metadata_version": null,
+    "nutrition": null,
+    "photo_url": "https://example.com/photos/c4b2a1ad-2ccd-4d88-9654-8e639523686c.jpg"
+  }
+}

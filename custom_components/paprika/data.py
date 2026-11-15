@@ -12,7 +12,7 @@ class PaprikaApiConfig:
     token: str
 
 
-type PaprikaConfigEntry = ConfigEntry[PaprikaApiConfig]  # noqa: F821
+type PaprikaConfigEntry = ConfigEntry[PaprikaApiConfig]
 
 
 @dataclass

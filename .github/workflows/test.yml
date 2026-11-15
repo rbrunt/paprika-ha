@@ -1,0 +1,40 @@
+name: Lint and test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  # Fail rather than re-resolve if uv.lock is out of date, including in `uv run`.
+  UV_LOCKED: 1
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.3
+        with:
+          enable-cache: true
+      - run: uv sync --only-group lint
+      - name: Check formatting
+        run: uv run --only-group lint ruff format --check --diff .
+      - name: Lint
+        # pyproject sets `fix = true` for local use; CI must only report.
+        run: uv run --only-group lint ruff check --no-fix .
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.3
+        with:
+          enable-cache: true
+      - run: uv sync
+      - run: uv run pytest

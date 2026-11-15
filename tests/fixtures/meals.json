@@ -1,0 +1,125 @@
+{
+  "result": [
+    {
+      "uid": "7F992CC6-DC3A-14E6-D496-1C3A3907F92A",
+      "recipe_uid": "2A6291BF-E77B-8172-09D9-7370A931EF25",
+      "date": "2024-12-25 00:00:00",
+      "type": 2,
+      "name": "Lentil Soup",
+      "order_flag": 1,
+      "type_uid": "77D1170E-0D65-FD0F-83DB-5387E70CFA2B",
+      "scale": null,
+      "is_ingredient": false
+    },
+    {
+      "uid": "79F26C4A-488C-3D81-4CEC-841223C66334",
+      "recipe_uid": "25B6F4E7-4B3C-F64A-E099-ECE51298CE41",
+      "date": "2024-12-26 00:00:00",
+      "type": 2,
+      "name": "Vegetable Curry",
+      "order_flag": 0,
+      "type_uid": "77D1170E-0D65-FD0F-83DB-5387E70CFA2B",
+      "scale": null,
+      "is_ingredient": false
+    },
+    {
+      "uid": "37E1A04F-4243-5C23-3C3D-85E782206E45",
+      "recipe_uid": "F0423196-BB0A-5B2B-42CF-4315CD3490D3",
+      "date": "2026-10-07 00:00:00",
+      "type": 2,
+      "name": "Pad Thai",
+      "order_flag": 0,
+      "type_uid": "77D1170E-0D65-FD0F-83DB-5387E70CFA2B",
+      "scale": null,
+      "is_ingredient": false
+    },
+    {
+      "uid": "4F18E220-FF54-6883-CA54-CB66A2A22BC0",
+      "recipe_uid": null,
+      "date": "2026-10-07 00:00:00",
+      "type": 2,
+      "name": "Tomato Tart",
+      "order_flag": 1,
+      "type_uid": "77D1170E-0D65-FD0F-83DB-5387E70CFA2B",
+      "scale": null,
+      "is_ingredient": false
+    },
+    {
+      "uid": "D96DC2C3-6187-BB3B-BC7C-338703CA883B",
+      "recipe_uid": "51E37C0F-E894-0626-D2CA-12FBBF42FB27",
+      "date": "2026-10-25 00:00:00",
+      "type": 1,
+      "name": "Miso Noodles",
+      "order_flag": 0,
+      "type_uid": "EAD8B88F-00E3-9D14-056E-9262BFCB0820",
+      "scale": null,
+      "is_ingredient": false
+    },
+    {
+      "uid": "9FA5C3D2-DDFA-4FAD-7CBF-536DF19D8C91",
+      "recipe_uid": null,
+      "date": "2026-11-01 00:00:00",
+      "type": 1,
+      "name": "Pancakes",
+      "order_flag": 0,
+      "type_uid": "EAD8B88F-00E3-9D14-056E-9262BFCB0820",
+      "scale": null,
+      "is_ingredient": false
+    },
+    {
+      "uid": "B895BBCD-5032-41C4-834D-FEAD3529356A",
+      "recipe_uid": null,
+      "date": "2026-11-08 00:00:00",
+      "type": 2,
+      "name": "Porridge",
+      "order_flag": 0,
+      "type_uid": "77D1170E-0D65-FD0F-83DB-5387E70CFA2B",
+      "scale": null,
+      "is_ingredient": false
+    },
+    {
+      "uid": "9A35A075-F8E6-E7CB-EF33-859A9A91185D",
+      "recipe_uid": "CB12E57D-8EE2-653E-E4F9-817D683231AE",
+      "date": "2026-11-17 00:00:00",
+      "type": 2,
+      "name": "Mushroom Risotto",
+      "order_flag": 0,
+      "type_uid": "77D1170E-0D65-FD0F-83DB-5387E70CFA2B",
+      "scale": null,
+      "is_ingredient": false
+    },
+    {
+      "uid": "A5A27A60-834C-211B-F41C-66E145CAEDD2",
+      "recipe_uid": "ECA15BBD-8820-0529-6D99-66FF89DBFD03",
+      "date": "2026-11-18 00:00:00",
+      "type": 2,
+      "name": "Banana Bread",
+      "order_flag": 1,
+      "type_uid": "77D1170E-0D65-FD0F-83DB-5387E70CFA2B",
+      "scale": null,
+      "is_ingredient": false
+    },
+    {
+      "uid": "F07C4963-E596-DA05-56CB-32764A1F5F62",
+      "recipe_uid": "C4B2A1AD-2CCD-4D88-9654-8E639523686C",
+      "date": "2026-11-19 00:00:00",
+      "type": 2,
+      "name": "Flapjacks",
+      "order_flag": 1,
+      "type_uid": "77D1170E-0D65-FD0F-83DB-5387E70CFA2B",
+      "scale": null,
+      "is_ingredient": false
+    },
+    {
+      "uid": "7A4574C6-4FA1-D83D-3113-BFDF7B7DF638",
+      "recipe_uid": "96F85648-C1F5-0AE4-75CC-AE712419A1B6",
+      "date": "2026-11-20 00:00:00",
+      "type": 2,
+      "name": "Spinach Dal",
+      "order_flag": 0,
+      "type_uid": "77D1170E-0D65-FD0F-83DB-5387E70CFA2B",
+      "scale": null,
+      "is_ingredient": false
+    }
+  ]
+}

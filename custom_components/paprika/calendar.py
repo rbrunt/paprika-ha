@@ -62,8 +62,7 @@ class PaprikaMealCalendar(CalendarEntity, CoordinatorEntity["PaprikaCoordinator"
         LOGGER.info(meal)
         if len(meal) >= 1:
             return self._meal_event(meal[0])
-        else:
-            return None
+        return None
 
     def _meal_event(self, meal: PlannedMeal) -> CalendarEvent:
         """Build an all-day event, with the recipe as its description if configured."""
@@ -132,8 +131,7 @@ class PaprikaAllMealsCalendar(CalendarEntity, CoordinatorEntity["PaprikaCoordina
                 summary=combined_summary,
                 description=combined_summary,
             )
-        else:
-            return None
+        return None
 
     def _format_meals_summary(self, meals: list[PlannedMeal]) -> str:
         """Format meals into a summary, grouping by meal type."""
@@ -195,7 +193,7 @@ class PaprikaAllMealsCalendar(CalendarEntity, CoordinatorEntity["PaprikaCoordina
 
 
 async def async_setup_entry(
-    hass: "HomeAssistant",  # noqa: ARG001 Unused function argument: `hass`
+    hass: "HomeAssistant",
     entry: "PaprikaConfigEntry",
     async_add_entities: "AddEntitiesCallback",
 ) -> None:

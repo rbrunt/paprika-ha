@@ -1,0 +1,20 @@
+{
+  "result": {
+    "categories": 37,
+    "recipes": 710,
+    "photos": 15,
+    "groceries": 2512,
+    "grocerylists": 12,
+    "groceryaisles": 192,
+    "groceryingredients": 94,
+    "meals": 820,
+    "mealtypes": 33,
+    "bookmarks": 0,
+    "pantry": 0,
+    "pantrylocations": 2,
+    "menus": 12,
+    "menuitems": 38,
+    "cookbooks": 2,
+    "recipesearches": 0
+  }
+}

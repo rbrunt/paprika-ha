@@ -1,0 +1,44 @@
+{
+  "result": [
+    {
+      "uid": "F43E8F29-AA3D-3A24-1DEA-08A70B6282EE",
+      "name": "Produce",
+      "order_flag": 6
+    },
+    {
+      "uid": "935C656A-7D58-6DD4-7C0C-DAAA3115956B",
+      "name": "World Foods",
+      "order_flag": 20
+    },
+    {
+      "uid": "AF91F2D8-6D31-83FB-A476-BF5FB0A09F70",
+      "name": "Condiments",
+      "order_flag": 12
+    },
+    {
+      "uid": "3446E8FF-0D5C-DA51-46AD-964D2E3FC8EB",
+      "name": "Cereal",
+      "order_flag": 4
+    },
+    {
+      "uid": "6A484C9A-65AE-935D-1DD2-9BDB99B00F46",
+      "name": "Deli",
+      "order_flag": 17
+    },
+    {
+      "uid": "236A8052-AA41-7842-2E20-14BC3024496F",
+      "name": "Seasonal",
+      "order_flag": 19
+    },
+    {
+      "uid": "E4AE5D5A-2ECD-636F-5F1C-1B6FEC1DAA9D",
+      "name": "Dairy",
+      "order_flag": 2
+    },
+    {
+      "uid": "CE2B571F-5C60-D49F-D5DD-B540EAA6BCD6",
+      "name": "Bakery",
+      "order_flag": 9
+    }
+  ]
+}

@@ -107,7 +107,7 @@ class PaprikaGroceryList(TodoListEntity, CoordinatorEntity["PaprikaCoordinator"]
 
 
 async def async_setup_entry(
-    hass: "HomeAssistant",  # noqa: ARG001 Unused function argument: `hass`
+    hass: "HomeAssistant",
     entry: "PaprikaConfigEntry",
     async_add_entities: "AddEntitiesCallback",
 ) -> None:

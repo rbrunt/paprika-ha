@@ -1,0 +1,11 @@
+{
+  "result": [
+    {
+      "uid": "8B1A8A6E-1140-3EFD-6405-ECFF0A01CBC2",
+      "name": "Groceries",
+      "order_flag": 0,
+      "is_default": true,
+      "reminders_list": "Hardware"
+    }
+  ]
+}
