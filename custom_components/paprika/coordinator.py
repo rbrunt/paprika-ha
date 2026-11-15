@@ -85,16 +85,24 @@ class PaprikaCoordinator(DataUpdateCoordinator[PaprikaData]):
 
         A failure or timeout here keeps the recipes from the last update rather
         than failing it, since the calendars still work without recipe details.
+        It also clears the last sync status, so the next poll retries instead of
+        waiting for something to change in Paprika.
         """
         cutoff = homeassistant.util.dt.now().date() - RECIPE_LOOKBACK
         wanted = {
             m["recipe_uid"] for m in meals if m["recipe_uid"] and m["date"] >= cutoff
         }
         try:
-            return await self.config_entry.runtime_data.client.get_recipes(wanted)
+            recipes, complete = await self.config_entry.runtime_data.client.get_recipes(
+                wanted
+            )
         except (aiohttp.ClientError, TimeoutError) as err:
             _LOGGER.warning("Could not fetch recipes, keeping the last ones: %s", err)
+            self.last_status = None
             return self.data.recipes if self.data else {}
+        if not complete:
+            self.last_status = None
+        return recipes
 
     async def async_save_grocery_items(
         self, items: list["GroceryListItem"]
