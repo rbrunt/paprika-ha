@@ -7,7 +7,7 @@ dependencies = []
 
 [dependency-groups]
 lint = [
-    "ruff==0.17.4",
+    "ruff==0.17.5",
 ]
 dev = [
     {include-group = "lint"},
